@@ -1,0 +1,3351 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeleVault Pro Player | مشغل السحابة الذكي</title>
+  <style>
+    :root {
+      --bg-base: #080c16;
+      --bg-surface: #0e1526;
+      --bg-card: #131c31;
+      --bg-card-hover: #1a2744;
+      --bg-card-active: #1e3258;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.14);
+      --border-active: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-light: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --accent-emerald: #10b981;
+      --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+      --danger: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", "Tajawal", Oxygen, Ubuntu, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom Slim Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      transition: background-color 0.85s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    body.cinematic-mode {
+      background-color: #000;
+      cursor: none;
+    }
+    body.cinematic-mode * {
+      cursor: none !important;
+    }
+
+    /* Top Bar with Glassmorphism */
+    header {
+      background: rgba(14, 21, 38, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 20;
+      will-change: transform, opacity, max-height;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  padding 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.4s ease;
+      max-height: 70px;
+      overflow: hidden;
+    }
+
+    body.cinematic-mode header {
+      opacity: 0;
+      transform: translateY(-20px);
+      max-height: 0px;
+      padding-top: 0px;
+      padding-bottom: 0px;
+      border-bottom-color: transparent;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      pointer-events: none;
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, 
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, 
+                  max-height 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, 
+                  padding 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, 
+                  border-color 0.5s ease;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15.5px;
+      letter-spacing: -0.2px;
+      color: #fff;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .brand-text-accent {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .server-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 20px;
+      font-size: 11px;
+      color: #34d399;
+      font-weight: 500;
+      transition: var(--transition-fast);
+    }
+    .server-status-pill.offline {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #f87171;
+    }
+
+    .server-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulseDot 2.2s infinite ease-in-out;
+    }
+    .server-status-pill.offline .server-dot {
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: none;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Top Controls */
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-grow: 1;
+      max-width: 680px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      color: var(--text-subtle);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(8, 12, 22, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 36px 8px 32px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+    .search-input:focus {
+      border-color: var(--accent-light);
+      background: rgba(8, 12, 22, 0.95);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .search-input::placeholder {
+      color: var(--text-subtle);
+      font-size: 12.5px;
+    }
+
+    .search-clear {
+      position: absolute;
+      left: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      display: none;
+      padding: 2px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-clear:hover {
+      color: var(--text-main);
+    }
+
+    /* Universal Buttons */
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      user-select: none;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+    }
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .btn.active {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border-color: var(--accent-light);
+      color: #fff;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .btn-download {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+    .btn-download:hover:not(:disabled) {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #fff;
+      box-shadow: 0 0 14px var(--accent-emerald-glow);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12) !important;
+      border-color: rgba(239, 68, 68, 0.35) !important;
+      color: #f87171 !important;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.25) !important;
+      border-color: #ef4444 !important;
+      color: #fff !important;
+    }
+
+    /* Main Container */
+    .container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left: Native Player Area */
+    .player-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      min-width: 340px;
+    }
+
+    .video-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0c1426 0%, #04060b 100%);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .video-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.88) 100%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    body.cinematic-mode .video-wrapper {
+      background: #000000;
+    }
+    body.cinematic-mode .video-wrapper::before {
+      opacity: 1;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      outline: none;
+      background: transparent;
+      object-fit: contain;
+      z-index: 2;
+      transform: translateZ(0);
+      will-change: transform;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: center center;
+    }
+
+    body.cinematic-mode video {
+      transform: translateZ(0);
+    }
+
+    /* Placeholder when no item is selected */
+    .player-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0f1930 0%, #080c16 100%);
+      z-index: 3;
+      padding: 30px;
+      text-align: center;
+      transition: opacity 0.25s ease;
+    }
+
+    .placeholder-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(2, 132, 199, 0.12);
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-light);
+      margin-bottom: 18px;
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .placeholder-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .placeholder-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 360px;
+      line-height: 1.5;
+    }
+
+    .shortcuts-strip {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .kbd-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 10px;
+      color: #fff;
+    }
+
+    /* Player Footer Bar */
+    .player-footer {
+      background: rgba(14, 21, 38, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 10;
+      flex-shrink: 0;
+      will-change: transform, opacity, max-height;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  padding 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.4s ease;
+      max-height: 80px;
+      overflow: hidden;
+    }
+
+    body.cinematic-mode .player-footer {
+      opacity: 0;
+      transform: translateY(20px);
+      max-height: 0px;
+      padding-top: 0px;
+      padding-bottom: 0px;
+      border-top-color: transparent;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      pointer-events: none;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, 
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, 
+                  max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, 
+                  padding 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, 
+                  border-color 0.4s ease;
+    }
+
+    .current-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+
+    .current-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .current-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .meta-tag.accent {
+      background: rgba(2, 132, 199, 0.15);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--accent-light);
+    }
+
+    .meta-tag.emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .playback-toggles {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Right: Ultra-fast Sidebar */
+    .sidebar {
+      width: 360px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+      z-index: 5;
+      will-change: width, opacity;
+      contain: layout paint;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                  opacity 0.3s ease, 
+                  border-color 0.3s ease;
+    }
+
+    body.cinematic-mode .sidebar {
+      width: 0px !important;
+      min-width: 0px !important;
+      opacity: 0;
+      border-left-color: transparent;
+      pointer-events: none;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                  opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.4s ease;
+    }
+
+    body.cinematic-mode .sidebar * {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity 0.15s ease !important;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sidebar-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-count {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(2, 132, 199, 0.15);
+      color: var(--accent-light);
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      padding: 1px 7px;
+      border-radius: 12px;
+    }
+
+    .storage-stat {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 12, 22, 0.3);
+      overflow-x: auto;
+    }
+
+    .filter-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 9px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .filter-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .filter-tab.active {
+      color: #fff;
+      background: rgba(2, 132, 199, 0.2);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    /* Folder Filter Bar */
+    .folder-filter-bar {
+      padding: 8px 12px;
+      background: rgba(8, 12, 22, 0.45);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .folder-select-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .folder-filter-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .folder-select {
+      flex: 1;
+      background: rgba(19, 28, 49, 0.95);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 5px 10px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .folder-select:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+    .folder-select option {
+      background: #0e1526;
+      color: #fff;
+    }
+
+    .folder-chips-scroll {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .folder-chips-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .folder-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2px 9px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .folder-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .folder-chip.active {
+      background: rgba(2, 132, 199, 0.25);
+      border-color: var(--accent-light);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .folder-chip.frequent:not(.active) {
+      border-color: rgba(56, 189, 248, 0.32);
+      background: rgba(2, 132, 199, 0.08);
+      color: #bae6fd;
+    }
+    .folder-chip.frequent:not(.active):hover {
+      border-color: rgba(56, 189, 248, 0.6);
+      background: rgba(2, 132, 199, 0.18);
+      color: #fff;
+    }
+
+    /* Media Items List */
+    .items-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      contain: content;
+    }
+
+    .item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: all var(--transition-fast);
+    }
+    .item-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-light);
+      transform: translateX(-2px);
+    }
+    .item-card.active {
+      background: var(--bg-card-active);
+      border-color: var(--border-active);
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.25);
+    }
+
+    .item-media-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+    .item-card.active .item-media-icon {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .item-info {
+      overflow: hidden;
+      flex: 1;
+      margin-left: 6px;
+    }
+
+    .item-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-main);
+    }
+    .item-card.active .item-name {
+      color: var(--accent-light);
+      font-weight: 600;
+    }
+
+    .item-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cached-pill {
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .card-dl-btn, .card-cache-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.65;
+      transition: all var(--transition-fast);
+    }
+    .card-dl-btn:hover {
+      opacity: 1;
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      color: #34d399;
+      transform: scale(1.08);
+    }
+    .card-cache-btn:hover {
+      opacity: 1;
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      transform: scale(1.08);
+    }
+    .card-cache-btn.is-cached {
+      color: #34d399;
+      opacity: 0.9;
+    }
+    .card-cache-btn.is-cached:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #f87171;
+    }
+    .card-cache-btn.is-downloading {
+      opacity: 1 !important;
+      background: rgba(2, 132, 199, 0.25) !important;
+      border-color: #38bdf8 !important;
+      color: #38bdf8 !important;
+      width: auto !important;
+      padding: 0 7px !important;
+      font-size: 10.5px !important;
+      font-weight: 700 !important;
+      gap: 4px !important;
+    }
+    .item-card.is-downloading {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(2, 132, 199, 0.05);
+    }
+    .btn.btn-cache.active-cached {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+    .btn.btn-cache.active-cached:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+    .btn.btn-cache.is-downloading {
+      background: rgba(2, 132, 199, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    @keyframes spinIcon {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spin-icon {
+      animation: spinIcon 0.9s linear infinite;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Skeleton Loading Cards */
+    .skeleton-card {
+      height: 52px;
+      background: linear-gradient(90deg, #131c31 25%, #1c2947 50%, #131c31 75%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+
+    @keyframes skeletonShimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Cache Mini Spinner */
+    .cache-spinner {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spinCache 0.8s linear infinite;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+    @keyframes spinCache {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      width: 90%;
+      max-width: 460px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      transform: translateY(12px);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .modal h3 {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close-icon {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .modal-close-icon:hover { color: #fff; }
+
+    .modal-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .modal input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(8, 12, 22, 0.8);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color var(--transition-fast);
+      direction: ltr;
+      text-align: left;
+    }
+    .modal input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Storage Modal Specifics */
+    .storage-summary-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: rgba(8, 12, 22, 0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+    .stat-card-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .stat-card-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .stat-card-val.accent {
+      color: var(--accent-light);
+    }
+
+    .modal-list-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .cached-items-scroller {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: rgba(8, 12, 22, 0.4);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cached-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+    }
+    .cached-item-row:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .cached-item-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-main);
+    }
+    .cached-item-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .cached-item-del-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+    .cached-item-del-btn:hover {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: 76px;
+      left: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.3s;
+    }
+    @keyframes slideInToast {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Live Download / Offline Cache Progress Widget */
+    .download-progress-container {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+      width: 360px;
+      max-width: calc(100vw - 48px);
+      pointer-events: none;
+    }
+
+    .download-progress-card {
+      background: rgba(13, 20, 36, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 15px rgba(2, 132, 199, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: slideInDownload 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.25s ease;
+      pointer-events: auto;
+      user-select: none;
+    }
+
+    @keyframes slideInDownload {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .download-progress-card.completed {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(16, 185, 129, 0.25);
+    }
+
+    .download-progress-card.error {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(239, 68, 68, 0.25);
+    }
+
+    .dl-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .dl-card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .dl-card-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(2, 132, 199, 0.2);
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .download-progress-card.completed .dl-card-icon {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .download-progress-card.error .dl-card-icon {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .dl-card-info {
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .dl-card-status {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .download-progress-card.completed .dl-card-status {
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    .download-progress-card.error .dl-card-status {
+      color: #f87171;
+    }
+
+    .dl-card-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dl-card-cancel-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .dl-card-cancel-btn:hover {
+      color: #fff;
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+    }
+
+    /* Progress Track & Fill */
+    .dl-progress-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .dl-progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      border-radius: 10px;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    .download-progress-card.completed .dl-progress-bar-fill {
+      background: linear-gradient(90deg, #059669, #34d399);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    }
+
+    .download-progress-card.error .dl-progress-bar-fill {
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Card Footer */
+    .dl-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .dl-card-percent {
+      font-weight: 700;
+      color: var(--accent-light);
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+    .download-progress-card.completed .dl-card-percent {
+      color: #34d399;
+    }
+
+    .dl-card-bytes {
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+
+
+    body.cinematic-mode .download-progress-container,
+    body.cinematic-mode .toast-container {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 860px) {
+      .container { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: 48vh;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        transition: height 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                    opacity 0.35s ease, 
+                    border-color 0.35s ease;
+      }
+      body.cinematic-mode .sidebar {
+        width: 100% !important;
+        height: 0px !important;
+        min-height: 0px !important;
+        opacity: 0;
+        border-top-color: transparent;
+        transition: height 0.85s cubic-bezier(0.25, 1, 0.35, 1), 
+                    opacity 0.6s cubic-bezier(0.25, 1, 0.35, 1), 
+                    border-color 0.6s ease;
+      }
+      .player-area { min-width: 100%; }
+      .top-controls { max-width: none; }
+      .brand span:nth-child(2) { display: none; }
+      .download-progress-container {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
+        bottom: 12px;
+      }
+      .toast-container {
+        left: 12px;
+        right: 12px;
+        top: 68px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+  <!-- Top Navigation Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo-icon" title="TeleVault Pro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          <path d="M13 11l-3 4h4l-2 5"/>
+        </svg>
+      </div>
+      <span>TeleVault <span class="brand-text-accent">Pro</span></span>
+      <span class="server-status-pill" id="serverStatusPill" title="جاري الفحص...">
+        <span class="server-dot"></span>
+        <span id="serverStatusText">متصل</span>
+      </span>
+    </div>
+
+    <div class="top-controls">
+      <div class="search-wrapper">
+        <span class="search-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+        </span>
+        <input type="text" id="searchInput" class="search-input" placeholder="بحث سريع في المقاطع والفيديوهات..." autocomplete="off">
+        <button id="searchClearBtn" class="search-clear" title="مسح البحث">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Offline Storage Button -->
+      <button id="storageBtn" class="btn" title="المقاطع المحفوظة محلياً والمساحة المستهلكة">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span id="storageBtnLabel">💾 المحفوظات: 0 B</span>
+      </button>
+
+      <button id="refreshBtn" class="btn" title="تحديث قائمة الملفات">
+        <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/>
+        </svg>
+        <span>تحديث</span>
+      </button>
+
+      <button id="settingsBtn" class="btn" title="إعدادات السيرفر">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>السيرفر</span>
+      </button>
+
+      <a href="downloader.html" class="btn" title="المتصفح والمحمل السحابي">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>المحمل</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <div class="container">
+    
+    <!-- Left: Pure Native Browser Player -->
+    <div class="player-area">
+      <div class="video-wrapper">
+        <video id="mainPlayer" controls autoplay loop playsinline preload="metadata"></video>
+        
+        <!-- Empty Placeholder when nothing is playing yet -->
+        <div class="player-placeholder" id="playerPlaceholder">
+          <div class="placeholder-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="placeholder-title">جاهز للتشغيل</div>
+          <div class="placeholder-sub">اختر أي مقطع من قائمة الوسائط لبدء البث الفوري بدون انتظار.</div>
+          <div class="shortcuts-strip">
+            <span class="kbd-badge"><kbd>Space</kbd> تشغيل / إيقاف</span>
+            <span class="kbd-badge"><kbd>L</kbd> تكرار المقطع</span>
+            <span class="kbd-badge"><kbd>C</kbd> وضع السينما</span>
+            <span class="kbd-badge"><kbd>S</kbd> حفظ أوفلاين</span>
+            <span class="kbd-badge"><kbd>D</kbd> تحميل المقطع</span>
+            <span class="kbd-badge"><kbd>F</kbd> ملء الشاشة</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player Controls & Current Song/Video Info -->
+      <div class="player-footer">
+        <div class="current-meta">
+          <div class="current-title" id="nowPlayingTitle">اختر مقطعاً لبدء المشاهدة</div>
+          <div class="current-badges">
+            <span class="meta-tag accent" id="loopBadgeTag">🔁 وضع التكرار مفعل</span>
+            <span class="meta-tag" id="sourceBadgeTag" style="display: none;">🌐 بث سحابي</span>
+            <span class="meta-tag" id="folderBadgeTag" style="display: none;">📁 الرئيسية</span>
+            <span class="meta-tag" id="sizeBadgeTag" style="display: none;">💾 0 MB</span>
+          </div>
+        </div>
+
+        <div class="playback-toggles">
+          <!-- Loop Toggle Button -->
+          <button id="loopBtn" class="btn active" title="تبديل وضع التكرار (L)">
+            <svg id="loopIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+            </svg>
+            <span id="loopText">تكرار المقطع</span>
+          </button>
+
+          <!-- Prev Button -->
+          <button id="prevBtn" class="btn" title="المقطع السابق (P)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/>
+            </svg>
+            <span>السابق</span>
+          </button>
+
+          <!-- Next Button -->
+          <button id="nextBtn" class="btn" title="المقطع التالي (N)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/>
+            </svg>
+            <span>التالي</span>
+          </button>
+
+          <!-- Cache / Save Offline Button -->
+          <button id="cacheCurrentBtn" class="btn btn-cache" title="حفظ المقطع الحالي في جهازك للتشغيل بدون إنترنت (S)" disabled>
+            <svg id="cacheCurrentIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="cacheCurrentText">حفظ أوفلاين</span>
+          </button>
+
+          <!-- Download Button -->
+          <button id="downloadBtn" class="btn btn-download" title="تحميل المقطع الحالي إلى القرص (D)" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" x2="3"/>
+            </svg>
+            <span>تحميل</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Ultra-fast Media List -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span>قائمة الوسائط</span>
+          <span class="badge-count" id="itemsCount">0</span>
+        </div>
+        <div class="storage-stat">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/>
+          </svg>
+          <span id="storageSize">0 MB</span>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="recent">
+          <span>⚡ الأحدث</span>
+        </button>
+        <button class="filter-tab" data-filter="offline">
+          <span>💾 المحفوظة (<span id="offlineTabCount">0</span>)</span>
+        </button>
+      </div>
+
+      <div class="folder-filter-bar">
+        <div class="folder-select-row">
+          <label for="folderSelect" class="folder-filter-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+            </svg>
+            <span>المجلد:</span>
+          </label>
+          <select id="folderSelect" class="folder-select" title="تصفية حسب المجلد">
+            <option value="__all__">📂 كل المجلدات</option>
+          </select>
+        </div>
+        <div class="folder-chips-scroll" id="folderChips">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <ul class="items-list" id="itemsList">
+        <!-- Rendered dynamically -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- Server Settings Modal -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          إعدادات سيرفر TeleVault
+        </h3>
+        <button class="modal-close-icon" id="closeSettingsModalX" title="إغلاق">&times;</button>
+      </div>
+      <p class="modal-desc">أدخل عنوان الخادم أو استخدم البروكسي التلقائي الآمن (HTTPS) لتجنب حظر المتصفح:</p>
+      <input type="text" id="serverHostInput" placeholder="https://... أو فارغ للافتراضي" spellcheck="false">
+      <div class="modal-actions">
+        <button class="btn" id="resetSettingsBtn" type="button" title="استعادة الضبط التلقائي">🔄 تلقائي</button>
+        <button class="btn" id="closeSettingsBtn">إلغاء</button>
+        <button class="btn active" id="saveSettingsBtn">حفظ وتحديث الاتصال</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offline Storage Management Modal -->
+  <div class="modal-backdrop" id="storageModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          إدارة الذاكرة المحلية (Offline Vault)
+        </h3>
+        <button class="modal-close-icon" id="closeStorageModalX" title="إغلاق">&times;</button>
+      </div>
+
+      <div class="storage-summary-cards">
+        <div class="stat-card">
+          <div class="stat-card-title">المقاطع المحفوظة</div>
+          <div class="stat-card-val" id="cachedCountVal">0 مقطع</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">إجمالي المساحة المستخدمة</div>
+          <div class="stat-card-val accent" id="cachedSizeVal">0 MB</div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: 12px;">
+        <span style="font-size: 11px; color: var(--text-muted);" id="deviceQuotaText">محمية في المتصفح لجهازك فقط</span>
+        <button class="btn btn-danger" id="clearAllCacheBtn" title="مسح كل الفيديوهات المحفوظة محلياً">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+          <span>مسح كل المحفوظات (Clear All)</span>
+        </button>
+      </div>
+
+      <div class="modal-list-title">قائمة المقاطع المخزنة في جهازك:</div>
+      <div class="cached-items-scroller" id="cachedItemsContainer">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-actions" style="margin-top: 14px;">
+        <button class="btn active" id="closeStorageModalBtn" style="min-width: 90px;">تم</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Download / Offline Cache Progress Container -->
+  <div class="download-progress-container" id="downloadProgressContainer"></div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // --- Configuration & Host Resolution ---
+    const DIRECT_SERVER = 'http://51.170.138.59:8080';
+    const PROXY_SERVER = 'https://ayoub314.vercel.app';
+
+    function isAndroidApp() {
+      return Boolean(window.AndroidBridge || (window.location && window.location.hostname.includes('androidplatform.net')));
+    }
+
+    function isCurrentHttps() {
+      return window.location.protocol === 'https:';
+    }
+
+    function isVercelHost() {
+      const h = window.location.hostname;
+      return h.endsWith('vercel.app') || h.includes('vercel');
+    }
+
+    function getActiveServerBase() {
+      const saved = localStorage.getItem('tv_server_host');
+      const isHttps = isCurrentHttps() && !isAndroidApp();
+
+      if (saved && saved.trim()) {
+        const clean = saved.trim().replace(/\/+$/, '');
+        if (isHttps && clean.startsWith('http://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
+          console.warn('[TeleCloud] Direct HTTP server blocked on HTTPS. Falling back to proxy.');
+          return isVercelHost() ? '' : PROXY_SERVER;
+        }
+        return clean;
+      }
+
+      if (isHttps) {
+        if (isVercelHost() || window.location.hostname === 'localhost') {
+          return '';
+        }
+        return PROXY_SERVER;
+      }
+
+      return DIRECT_SERVER;
+    }
+
+    // =========================================================================
+    // --- IndexedDB Offline Vault (Full Binary Video Caching Engine) ---
+    // =========================================================================
+    const OfflineVault = {
+      dbName: 'TeleVault_Offline_DB',
+      storeName: 'cached_videos',
+      dbVersion: 1,
+      _dbPromise: null,
+
+      init() {
+        if (this._dbPromise) return this._dbPromise;
+        this._dbPromise = new Promise((resolve, reject) => {
+          if (!window.indexedDB) {
+            console.warn('IndexedDB is not supported in this browser.');
+            resolve(null);
+            return;
+          }
+          const req = indexedDB.open(this.dbName, this.dbVersion);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(this.storeName)) {
+              const store = db.createObjectStore(this.storeName, { keyPath: 'path' });
+              store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = (e) => {
+            console.error('IndexedDB open error:', e);
+            resolve(null);
+          };
+        });
+        return this._dbPromise;
+      },
+
+      async get(path) {
+        try {
+          const db = await this.init();
+          if (!db) return null;
+          return new Promise((resolve) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const req = store.get(path);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+          });
+        } catch (err) {
+          console.warn('OfflineVault.get failed:', err);
+          return null;
+        }
+      },
+
+      async put(item, blob) {
+        try {
+          const db = await this.init();
+          if (!db) return null;
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const record = {
+              path: item.path,
+              name: item.name || item.path.split('/').pop(),
+              folder_name: item.folder_name || (item.path.includes('/') ? item.path.split('/')[0] : 'الرئيسية'),
+              size: blob.size || item.size || 0,
+              type: blob.type || 'video/mp4',
+              blob: blob,
+              timestamp: Date.now()
+            };
+            const req = store.put(record);
+            req.onsuccess = () => resolve(record);
+            req.onerror = (e) => reject(e);
+          });
+        } catch (err) {
+          console.error('OfflineVault.put failed:', err);
+          throw err;
+        }
+      },
+
+      async delete(path) {
+        try {
+          const db = await this.init();
+          if (!db) return false;
+          return new Promise((resolve) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const req = store.delete(path);
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => resolve(false);
+          });
+        } catch (err) {
+          console.warn('OfflineVault.delete failed:', err);
+          return false;
+        }
+      },
+
+      async getAll() {
+        try {
+          const db = await this.init();
+          if (!db) return [];
+          return new Promise((resolve) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => resolve([]);
+          });
+        } catch (err) {
+          console.warn('OfflineVault.getAll failed:', err);
+          return [];
+        }
+      },
+
+      async clear() {
+        try {
+          const db = await this.init();
+          if (!db) return false;
+          return new Promise((resolve) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const req = store.clear();
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => resolve(false);
+          });
+        } catch (err) {
+          console.warn('OfflineVault.clear failed:', err);
+          return false;
+        }
+      },
+
+      async getTotalSize() {
+        const all = await this.getAll();
+        return all.reduce((sum, item) => sum + (item.blob ? item.blob.size : (item.size || 0)), 0);
+      }
+    };
+
+    // --- State Variables ---
+    let serverBase = getActiveServerBase();
+    let allMediaItems = [];
+    let currentFilter = 'recent';
+    let currentFolder = '__all__';
+    let currentIndex = -1;
+    let isLoopSingle = true;
+    let currentBlobUrl = null;
+    let currentCacheAbortCtrl = null;
+    let cachedPathsSet = new Set();
+    let isOfflineMode = false;
+    let isCinematicActive = false;
+    let cinematicTimeout = null;
+    const CINEMATIC_IDLE_DELAY = 3500; // 3.5 seconds of stillness
+    let activeDownloads = new Map(); // key: path -> { item, abortCtrl, percent, receivedBytes, totalBytes, status, cardEl, isAutoWatch }
+
+    // DOM Elements
+    const player = document.getElementById('mainPlayer');
+    const playerPlaceholder = document.getElementById('playerPlaceholder');
+    const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+    const loopBadgeTag = document.getElementById('loopBadgeTag');
+    const sourceBadgeTag = document.getElementById('sourceBadgeTag');
+    const folderBadgeTag = document.getElementById('folderBadgeTag');
+    const sizeBadgeTag = document.getElementById('sizeBadgeTag');
+    const itemsList = document.getElementById('itemsList');
+    const itemsCount = document.getElementById('itemsCount');
+    const storageSize = document.getElementById('storageSize');
+    const searchInput = document.getElementById('searchInput');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const loopBtn = document.getElementById('loopBtn');
+    const loopText = document.getElementById('loopText');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const cacheCurrentBtn = document.getElementById('cacheCurrentBtn');
+    const cacheCurrentIcon = document.getElementById('cacheCurrentIcon');
+    const cacheCurrentText = document.getElementById('cacheCurrentText');
+    const downloadProgressContainer = document.getElementById('downloadProgressContainer');
+    const serverStatusPill = document.getElementById('serverStatusPill');
+    const serverStatusText = document.getElementById('serverStatusText');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const serverHostInput = document.getElementById('serverHostInput');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const closeSettingsModalX = document.getElementById('closeSettingsModalX');
+    const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const folderSelect = document.getElementById('folderSelect');
+    const folderChips = document.getElementById('folderChips');
+    const toastContainer = document.getElementById('toastContainer');
+    const storageBtn = document.getElementById('storageBtn');
+    const storageBtnLabel = document.getElementById('storageBtnLabel');
+    const storageModal = document.getElementById('storageModal');
+    const closeStorageModalBtn = document.getElementById('closeStorageModalBtn');
+    const closeStorageModalX = document.getElementById('closeStorageModalX');
+    const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
+    const cachedCountVal = document.getElementById('cachedCountVal');
+    const cachedSizeVal = document.getElementById('cachedSizeVal');
+    const deviceQuotaText = document.getElementById('deviceQuotaText');
+    const cachedItemsContainer = document.getElementById('cachedItemsContainer');
+    const offlineTabCount = document.getElementById('offlineTabCount');
+
+    // Utility: Format bytes
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    // Utility: Toast notifications
+    function showToast(message, icon = 'ℹ️') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Update Loop UI & State
+    function updateLoopUI() {
+      player.loop = isLoopSingle;
+      if (isLoopSingle) {
+        loopBtn.classList.add('active');
+        loopText.textContent = 'تكرار المقطع';
+        loopBadgeTag.textContent = '🔁 وضع التكرار مفعل';
+        loopBadgeTag.className = 'meta-tag accent';
+      } else {
+        loopBtn.classList.remove('active');
+        loopText.textContent = 'تشغيل تلقائي';
+        loopBadgeTag.textContent = '⏭️ الانتقال للتالي تلقائياً';
+        loopBadgeTag.className = 'meta-tag';
+      }
+    }
+
+    loopBtn.addEventListener('click', () => {
+      isLoopSingle = !isLoopSingle;
+      updateLoopUI();
+      showToast(isLoopSingle ? 'تم تفعيل تكرار المقطع' : 'تم تفعيل الانتقال التلقائي للتالي', '🔁');
+    });
+
+    // --- Fullscreen & Cinematic Theater Engine ---
+    function toggleFullscreen() {
+      try {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        } else {
+          const root = document.documentElement;
+          if (root.requestFullscreen) {
+            root.requestFullscreen().catch(() => {});
+          } else if (root.webkitRequestFullscreen) {
+            root.webkitRequestFullscreen();
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (player) {
+      player.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        toggleFullscreen();
+      });
+    }
+
+    function enterCinematicMode() {
+      if (isCinematicActive) return;
+      if (!player || player.paused || player.ended || currentIndex === -1) return;
+      if (settingsModal.classList.contains('open') || storageModal.classList.contains('open')) return;
+      if (document.activeElement === searchInput) return;
+
+      isCinematicActive = true;
+      document.body.classList.add('cinematic-mode');
+
+      // Attempt native fullscreen if supported
+      try {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+          }
+        }
+      } catch (e) {}
+    }
+
+    function exitCinematicMode() {
+      if (!isCinematicActive) return;
+      isCinematicActive = false;
+      document.body.classList.remove('cinematic-mode');
+
+      // Exit native fullscreen if active
+      try {
+        if (document.fullscreenElement) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+      } catch (e) {}
+
+      resetCinematicTimer();
+    }
+
+    function toggleCinematicMode() {
+      if (isCinematicActive) {
+        exitCinematicMode();
+      } else {
+        enterCinematicMode();
+      }
+    }
+
+    function resetCinematicTimer() {
+      if (cinematicTimeout) {
+        clearTimeout(cinematicTimeout);
+        cinematicTimeout = null;
+      }
+
+      // If already in cinematic mode, do NOT exit on internal timer resets!
+      if (isCinematicActive) return;
+
+      if (player && !player.paused && !player.ended && currentIndex !== -1 && player.currentTime > 0) {
+        cinematicTimeout = setTimeout(() => {
+          enterCinematicMode();
+        }, CINEMATIC_IDLE_DELAY);
+      }
+    }
+
+    let lastActivityTimestamp = 0;
+    function handleUserActivity() {
+      const now = Date.now();
+      if (now - lastActivityTimestamp < 60) return;
+      lastActivityTimestamp = now;
+
+      if (isCinematicActive) {
+        exitCinematicMode();
+      } else {
+        resetCinematicTimer();
+      }
+    }
+
+    window.addEventListener('mousemove', handleUserActivity, { passive: true });
+    window.addEventListener('mousedown', handleUserActivity, { passive: true });
+    window.addEventListener('touchstart', handleUserActivity, { passive: true });
+    window.addEventListener('wheel', handleUserActivity, { passive: true });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && isCinematicActive) {
+        exitCinematicMode();
+      }
+    });
+
+    player.addEventListener('play', () => {
+      if (!isCinematicActive) resetCinematicTimer();
+    });
+
+    player.addEventListener('pause', () => {
+      // Debounce to distinguish true pause from internal loop/source rewind
+      setTimeout(() => {
+        if (player.paused && !player.seeking && isCinematicActive) {
+          exitCinematicMode();
+        }
+      }, 300);
+    });
+
+    let hasAutoSavedCurrent = false;
+
+    // Check completion during playback (works for loop and regular play)
+    player.addEventListener('timeupdate', () => {
+      if (!hasAutoSavedCurrent && player.duration > 0 && currentIndex !== -1 && allMediaItems[currentIndex]) {
+        // If within the last 0.6s of the video (watched completely)
+        if (player.currentTime >= player.duration - 0.6) {
+          hasAutoSavedCurrent = true;
+          saveVideoToOfflineOnCompletion(allMediaItems[currentIndex]);
+        }
+      }
+    });
+
+    // Auto next when video finishes (if not looping)
+    player.addEventListener('ended', async () => {
+      if (!hasAutoSavedCurrent && currentIndex !== -1 && allMediaItems[currentIndex]) {
+        hasAutoSavedCurrent = true;
+        saveVideoToOfflineOnCompletion(allMediaItems[currentIndex]);
+      }
+      if (!isLoopSingle) {
+        playNext();
+      }
+    });
+
+    // Handle Player Errors gracefully
+    player.addEventListener('error', async () => {
+      const err = player.error;
+      console.error('HTML5 Video Player Error:', err);
+      
+      // If error occurs while streaming, attempt fallback to local cache if available
+      if (currentIndex !== -1 && allMediaItems[currentIndex]) {
+        const item = allMediaItems[currentIndex];
+        const cached = await OfflineVault.get(item.path);
+        if (cached && cached.blob && player.src !== currentBlobUrl) {
+          console.log('[TeleVault] Network stream failed, switching seamlessly to cached blob.');
+          if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+          currentBlobUrl = URL.createObjectURL(cached.blob);
+          player.src = currentBlobUrl;
+          sourceBadgeTag.textContent = '⚡ تشغيل محلي (تحويل تلقائي بعد انقطاع)';
+          sourceBadgeTag.className = 'meta-tag emerald';
+          player.load();
+          player.play().catch(() => {});
+          showToast('انقطع البث المباشر، تم التحويل للمشاهدة من الذاكرة المحلية 💾', '⚡');
+          return;
+        }
+      }
+
+      let msg = 'تعذر تشغيل هذا المقطع.';
+      if (err) {
+        if (err.code === 1) msg = 'تم إلغاء تشغيل المقطع.';
+        else if (err.code === 2) msg = 'خطأ في اتصال الشبكة أثناء بث الفيديو.';
+        else if (err.code === 3) msg = 'خطأ في فك ترميز الفيديو (Decode Error).';
+        else if (err.code === 4) msg = 'تعذر تحميل مصدر الفيديو أو أن الصيغة غير مدعومة.';
+      }
+      showToast(msg, '⚠️');
+    });
+
+    // Skeletons while loading
+    function renderSkeletons() {
+      itemsList.innerHTML = Array(6).fill('<li class="skeleton-card"></li>').join('');
+    }
+
+    // Refresh Cached Paths Set & Storage Stats
+    async function updateStorageStats() {
+      try {
+        const cachedList = await OfflineVault.getAll();
+        cachedPathsSet = new Set(cachedList.map(x => x.path));
+        const totalBytes = cachedList.reduce((sum, it) => sum + (it.blob ? it.blob.size : (it.size || 0)), 0);
+        
+        storageBtnLabel.textContent = `💾 المحفوظات: ${formatBytes(totalBytes)}`;
+        offlineTabCount.textContent = cachedList.length;
+
+        // If storage modal is currently open, refresh its content
+        if (storageModal.classList.contains('open')) {
+          cachedCountVal.textContent = `${cachedList.length} مقطع`;
+          cachedSizeVal.textContent = formatBytes(totalBytes);
+
+          // Storage estimate
+          if (navigator.storage && navigator.storage.estimate) {
+            try {
+              const estimate = await navigator.storage.estimate();
+              const available = estimate.quota ? formatBytes(estimate.quota - (estimate.usage || 0)) : '';
+              deviceQuotaText.textContent = available ? `مساحة المتصفح المتبقية لجهازك: ~${available}` : 'محمية في المتصفح لجهازك فقط';
+            } catch (e) {
+              deviceQuotaText.textContent = 'محمية في المتصفح لجهازك فقط';
+            }
+          }
+
+          if (cachedList.length === 0) {
+            cachedItemsContainer.innerHTML = `
+              <div style="padding: 24px 10px; text-align: center; color: var(--text-muted); font-size: 12px;">
+                لا توجد مقاطع محفوظة محلياً حتى الآن.
+              </div>
+            `;
+          } else {
+            cachedItemsContainer.innerHTML = '';
+            cachedList.forEach(item => {
+              const row = document.createElement('div');
+              row.className = 'cached-item-row';
+              row.innerHTML = `
+                <div class="cached-item-name" title="${item.name}">${item.name}</div>
+                <div class="cached-item-meta">${formatBytes(item.size)}</div>
+                <button class="cached-item-del-btn" title="حذف هذا المقطع من الذاكرة">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              `;
+
+              const delBtn = row.querySelector('.cached-item-del-btn');
+              delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await removeCachedVideo(item.path, item.name);
+              });
+
+              cachedItemsContainer.appendChild(row);
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to update storage stats:', err);
+      }
+    }
+
+    // HTML Escaper for Safe Attribute/Text Rendering
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m]));
+    }
+
+    // --- Folder Visit Frequency Tracking & Smart Suggestions ---
+    function getFolderVisits() {
+      try {
+        return JSON.parse(localStorage.getItem('tv_folder_visits') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function recordFolderVisit(folder, points = 1) {
+      if (!folder || folder === '__all__') return;
+      try {
+        const visits = getFolderVisits();
+        visits[folder] = (visits[folder] || 0) + points;
+        localStorage.setItem('tv_folder_visits', JSON.stringify(visits));
+      } catch (e) {}
+    }
+
+    // Populate Dynamic Folder Dropdown and Quick Chips (Ranked by Visits & Items)
+    function populateFolderFilters() {
+      const folderVisits = getFolderVisits();
+      const folderCounts = new Map();
+      let rootCount = 0;
+
+      allMediaItems.forEach(it => {
+        const f = it.folder_name || (it.path.includes('/') ? it.path.split('/')[0] : '');
+        if (!f || f === 'الرئيسية') {
+          rootCount++;
+        } else {
+          folderCounts.set(f, (folderCounts.get(f) || 0) + 1);
+        }
+      });
+
+      // Collect all folders
+      const folderList = [];
+      if (rootCount > 0) {
+        folderList.push({
+          key: '__root__',
+          displayName: 'الرئيسية',
+          count: rootCount,
+          visits: folderVisits['__root__'] || 0
+        });
+      }
+
+      folderCounts.forEach((count, name) => {
+        folderList.push({
+          key: name,
+          displayName: name,
+          count: count,
+          visits: folderVisits[name] || 0
+        });
+      });
+
+      // Sort: Folders with higher visits appear FIRST! Tie-breaker: video count descending
+      folderList.sort((a, b) => {
+        if (b.visits !== a.visits) {
+          return b.visits - a.visits;
+        }
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.displayName.localeCompare(b.displayName);
+      });
+
+      if (folderSelect) {
+        let opts = `<option value="__all__">📂 كل المجلدات (${allMediaItems.length})</option>`;
+        folderList.forEach(f => {
+          const starPrefix = f.visits > 0 ? '⭐ ' : '📁 ';
+          opts += `<option value="${escapeHtml(f.key)}">${starPrefix}${escapeHtml(f.displayName)} (${f.count})</option>`;
+        });
+        folderSelect.innerHTML = opts;
+
+        // Restore active folder selection if still valid
+        const validValues = Array.from(folderSelect.options).map(o => o.value);
+        if (validValues.includes(currentFolder)) {
+          folderSelect.value = currentFolder;
+        } else {
+          currentFolder = '__all__';
+          folderSelect.value = '__all__';
+        }
+      }
+
+      if (folderChips) {
+        let chipsHtml = `
+          <button class="folder-chip ${currentFolder === '__all__' ? 'active' : ''}" data-folder="__all__">
+            الكل (${allMediaItems.length})
+          </button>
+        `;
+        folderList.forEach(f => {
+          const isActive = (currentFolder.toLowerCase() === f.key.toLowerCase());
+          const starPrefix = f.visits > 0 ? '⭐ ' : '';
+          const isFrequent = f.visits > 0 ? 'frequent' : '';
+          const visitTip = f.visits > 0 ? ` • مجلد مقترح شائع (${f.visits} زيارة)` : '';
+          chipsHtml += `
+            <button class="folder-chip ${isActive ? 'active' : ''} ${isFrequent}" data-folder="${escapeHtml(f.key)}" title="مجلد ${escapeHtml(f.displayName)}${visitTip}">
+              ${starPrefix}${escapeHtml(f.displayName)} (${f.count})
+            </button>
+          `;
+        });
+        folderChips.innerHTML = chipsHtml;
+
+        folderChips.querySelectorAll('.folder-chip').forEach(btn => {
+          btn.addEventListener('click', () => {
+            setFolderFilter(btn.dataset.folder);
+          });
+        });
+      }
+    }
+
+    function setFolderFilter(folder) {
+      if (folder && folder !== '__all__') {
+        recordFolderVisit(folder, 2);
+      }
+      currentFolder = folder;
+      if (folderSelect) folderSelect.value = folder;
+
+      if (folderChips) {
+        folderChips.querySelectorAll('.folder-chip').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.folder.toLowerCase() === folder.toLowerCase());
+        });
+      }
+      renderList();
+
+      if (folder === '__all__') {
+        populateFolderFilters();
+      }
+    }
+
+    // Fetch Files from Server API
+    async function loadMediaItems() {
+      serverStatusPill.className = 'server-status-pill';
+      serverStatusText.textContent = 'جاري الاتصال...';
+      renderSkeletons();
+
+      // Spin refresh button icon
+      refreshIcon.style.transition = 'transform 0.6s ease';
+      refreshIcon.style.transform = 'rotate(360deg)';
+      setTimeout(() => {
+        refreshIcon.style.transition = 'none';
+        refreshIcon.style.transform = 'rotate(0deg)';
+      }, 600);
+
+      try {
+        const base = serverBase ? serverBase : '';
+        const url = `${base}/api/tg-cloud/category?type=video&_t=${Date.now()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.items)) {
+          // Defensive client-side deduplication
+          const seen = new Set();
+          const deduped = [];
+          for (const it of data.items) {
+            const key = it.file_unique_id ? `uid:${it.file_unique_id}` : (it.channel_msg_id ? `mid:${it.channel_msg_id}` : `path:${it.path}`);
+            if (!seen.has(key)) {
+              seen.add(key);
+              deduped.push(it);
+            }
+          }
+
+          // Strict Newest First default sort: highest channel_msg_id first
+          deduped.sort((a, b) => {
+            const midA = parseInt(a.channel_msg_id, 10) || 0;
+            const midB = parseInt(b.channel_msg_id, 10) || 0;
+            if (midB !== midA) return midB - midA;
+            const timeA = a.created_at || '';
+            const timeB = b.created_at || '';
+            return timeB.localeCompare(timeA);
+          });
+
+          allMediaItems = deduped;
+          isOfflineMode = false;
+          serverStatusPill.className = 'server-status-pill';
+          serverStatusText.textContent = 'متصل';
+          const displayHost = serverBase || (isCurrentHttps() ? 'بروكسي Vercel الآمن (HTTPS)' : DIRECT_SERVER);
+          serverStatusPill.title = 'متصل بالسيرفر: ' + displayHost;
+          await updateStorageStats();
+          populateFolderFilters();
+          renderList();
+        } else {
+          throw new Error('استجابة غير صالحة من السيرفر');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        isOfflineMode = true;
+        serverStatusPill.className = 'server-status-pill offline';
+        serverStatusText.textContent = 'أوفلاين';
+        serverStatusPill.title = 'فشل الاتصال: ' + err.message;
+        
+        // Load offline cached items into view
+        const cachedList = await OfflineVault.getAll();
+        await updateStorageStats();
+
+        if (cachedList.length > 0) {
+          cachedList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          allMediaItems = cachedList;
+          currentFilter = 'offline';
+          filterTabs.forEach(t => t.classList.toggle('active', t.dataset.filter === 'offline'));
+          populateFolderFilters();
+          renderList();
+          showToast('تم تفعيل وضع عدم الاتصال: يمكنك تشغيل الفيديوهات المحفوظة محلياً 💾', '📡');
+        } else {
+          itemsList.innerHTML = `
+            <li style="padding: 30px 16px; text-align: center; color: var(--danger); font-size: 13px; line-height: 1.6;">
+              <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">تعذر الاتصال بالسيرفر</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">${err.message}</div>
+              <button class="btn active" onclick="loadMediaItems()" style="margin: 0 auto;">إعادة المحاولة</button>
+            </li>
+          `;
+        }
+      }
+    }
+
+    // Filter & Search Logic
+    function getFilteredItems() {
+      const q = searchInput.value.trim().toLowerCase();
+      let list = allMediaItems;
+
+      // 1. Filter by Folder
+      if (currentFolder !== '__all__') {
+        if (currentFolder === '__root__') {
+          list = list.filter(it => !it.folder_name || it.folder_name === '' || it.folder_name === 'الرئيسية' || !it.path.includes('/'));
+        } else {
+          list = list.filter(it => {
+            const fName = (it.folder_name || (it.path.includes('/') ? it.path.split('/')[0] : '')).toLowerCase();
+            return fName === currentFolder.toLowerCase();
+          });
+        }
+      }
+
+      // 2. Filter by Tab (offline vs recent)
+      if (currentFilter === 'offline') {
+        list = list.filter(it => cachedPathsSet.has(it.path));
+      }
+
+      // 3. Search Query Filter
+      if (q) {
+        list = list.filter(it => 
+          (it.name && it.name.toLowerCase().includes(q)) || 
+          (it.path && it.path.toLowerCase().includes(q)) ||
+          (it.caption && it.caption.toLowerCase().includes(q))
+        );
+      }
+      return list;
+    }
+
+    // Render Media List
+    function renderList() {
+      const filtered = getFilteredItems();
+      itemsCount.textContent = filtered.length;
+      
+      const totalBytes = filtered.reduce((acc, it) => acc + (it.size || 0), 0);
+      storageSize.textContent = formatBytes(totalBytes);
+
+      if (filtered.length === 0) {
+        const folderLabel = (currentFolder !== '__all__') ? ` في مجلد "${currentFolder === '__root__' ? 'الرئيسية' : currentFolder}"` : '';
+        itemsList.innerHTML = `
+          <li style="padding: 40px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+            <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">🔍</div>
+            <div>${currentFilter === 'offline' ? `لا توجد فيديوهات محفوظة أوفلاين${folderLabel}` : `لا توجد وسائط مطابقة للبحث${folderLabel}`}</div>
+          </li>
+        `;
+        return;
+      }
+
+      itemsList.innerHTML = '';
+      filtered.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'item-card';
+        li.dataset.path = item.path;
+        const isActive = (currentIndex !== -1 && allMediaItems[currentIndex] && allMediaItems[currentIndex].path === item.path);
+        if (isActive) {
+          li.classList.add('active');
+        }
+
+        const isCached = cachedPathsSet.has(item.path);
+        const isDownloading = activeDownloads.has(item.path);
+        const dlState = isDownloading ? activeDownloads.get(item.path) : null;
+        if (isDownloading) {
+          li.classList.add('is-downloading');
+        }
+
+        const cleanName = item.name || item.path.split('/').pop();
+        const folder = item.folder_name || (item.path.includes('/') ? item.path.split('/')[0] : 'الرئيسية');
+        const sizeStr = formatBytes(item.size);
+
+        li.innerHTML = `
+          <div class="item-media-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="item-info">
+            <div class="item-name" title="${cleanName}">${cleanName}</div>
+            <div class="item-sub">
+              <span>📁 ${folder}</span>
+              <span>💾 ${sizeStr}</span>
+              ${isCached ? '<span class="cached-pill" title="محفوظ في جهازك للتشغيل بدون إنترنت">⚡ أوفلاين</span>' : ''}
+            </div>
+          </div>
+          <div class="item-actions">
+            <button class="card-cache-btn ${isDownloading ? 'is-downloading' : (isCached ? 'is-cached' : '')}" title="${isDownloading ? `جاري الحفظ: ${dlState.percent}% (انقر للإلغاء)` : (isCached ? 'محفوظ في جهازك - انقر لحذفه من الذاكرة' : 'حفظ هذا المقطع أوفلاين')}">
+              ${isDownloading ? `
+                <svg class="spin-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                  <path d="M12 2a10 10 0 0 1 10 10"/>
+                </svg>
+                <span>${dlState.percent}%</span>
+              ` : (isCached ? `
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+              ` : `
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                </svg>
+              `)}
+            </button>
+            <button class="card-dl-btn" title="تحميل الملف مباشرة إلى الكمبيوتر">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" x2="3"/>
+              </svg>
+            </button>
+          </div>
+        `;
+
+        // Card Click -> Play
+        li.addEventListener('click', () => {
+          playItem(item);
+        });
+
+        // Quick Cache Icon Click
+        const cacheBtn = li.querySelector('.card-cache-btn');
+        cacheBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (activeDownloads.has(item.path)) {
+            const dl = activeDownloads.get(item.path);
+            if (confirm(`هل تريد إلغاء تحميل وحفظ "${cleanName}"؟`)) {
+              if (dl.abortCtrl) dl.abortCtrl.abort();
+            }
+            return;
+          }
+          if (isCached) {
+            await removeCachedVideo(item.path, cleanName);
+          } else {
+            await cacheVideoManually(item);
+          }
+        });
+
+        // Quick Download Icon Click
+        const dlBtn = li.querySelector('.card-dl-btn');
+        dlBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadItem(item);
+        });
+
+        itemsList.appendChild(li);
+      });
+    }
+
+    // Play a Specific Media Item with 100% Offline Immunity
+    async function playItem(item) {
+      currentIndex = allMediaItems.findIndex(x => x.path === item.path);
+      const cleanName = item.name || item.path.split('/').pop();
+      const folder = item.folder_name || (item.path.includes('/') ? item.path.split('/')[0] : 'الرئيسية');
+      const folderKey = (!item.folder_name || item.folder_name === 'الرئيسية') && !item.path.includes('/') ? '__root__' : (item.folder_name || (item.path.includes('/') ? item.path.split('/')[0] : '__root__'));
+      recordFolderVisit(folderKey, 1);
+      const sizeStr = formatBytes(item.size);
+
+      nowPlayingTitle.textContent = cleanName;
+      nowPlayingTitle.title = cleanName;
+      
+      folderBadgeTag.textContent = `📁 ${folder}`;
+      folderBadgeTag.style.display = 'inline-flex';
+      
+      sizeBadgeTag.textContent = `💾 ${sizeStr}`;
+      sizeBadgeTag.style.display = 'inline-flex';
+
+      // Hide idle placeholder
+      playerPlaceholder.style.opacity = '0';
+      setTimeout(() => { playerPlaceholder.style.display = 'none'; }, 200);
+
+      downloadBtn.disabled = false;
+      updateLoopUI();
+      updatePlayerFooterCacheBtn();
+
+      hasAutoSavedCurrent = false;
+
+      // Check if video is already stored in local IndexedDB
+      const cached = await OfflineVault.get(item.path);
+
+      if (cached && cached.blob) {
+        // 100% OFFLINE IMMUNITY: Play directly from local memory/disk blob!
+        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = URL.createObjectURL(cached.blob);
+        player.src = currentBlobUrl;
+
+        sourceBadgeTag.textContent = '⚡ تشغيل محلي (مخزن أوفلاين)';
+        sourceBadgeTag.className = 'meta-tag emerald';
+        sourceBadgeTag.style.display = 'inline-flex';
+        sourceBadgeTag.title = 'يعمل بالكامل من ذاكرة جهازك وبدون اتصال بالإنترنت';
+
+        player.load();
+        player.play().catch(handlePlayPromise);
+      } else {
+        // Online Streaming - 100% Bandwidth to player for INSTANT startup
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+          currentBlobUrl = null;
+        }
+        const base = serverBase ? serverBase : '';
+        const streamUrl = `${base}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}&_v=${Date.now()}`;
+        player.src = streamUrl;
+
+        sourceBadgeTag.textContent = '🌐 بث سحابي مباشر';
+        sourceBadgeTag.className = 'meta-tag';
+        sourceBadgeTag.style.display = 'inline-flex';
+        sourceBadgeTag.title = 'يتم البث المباشر من السحابة (سيتم الحفظ تلقائياً عند إكمال المشاهدة 💾)';
+
+        player.load();
+        player.play().catch(handlePlayPromise);
+      }
+
+      renderList();
+      updatePlayerFooterCacheBtn();
+      resetCinematicTimer();
+    }
+
+    function handlePlayPromise(e) {
+      if (e.name === 'NotAllowedError') {
+        console.log('Autoplay was prevented by browser (user gesture required)');
+      } else {
+        console.warn('Playback interrupted or prevented:', e);
+      }
+    }
+
+    // --- Live Stream Caching & Progress Engine ---
+    function getSafeId(path) {
+      return 'dl_' + btoa(encodeURIComponent(path)).replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
+    function createDownloadProgressUI(downloadState) {
+      const item = downloadState.item;
+      const safeId = getSafeId(item.path);
+      const cleanName = item.name || item.path.split('/').pop();
+      const totalStr = downloadState.totalBytes ? formatBytes(downloadState.totalBytes) : '...';
+
+      let existing = document.getElementById(safeId);
+      if (existing) existing.remove();
+
+      const card = document.createElement('div');
+      card.className = 'download-progress-card';
+      card.id = safeId;
+      card.innerHTML = `
+        <div class="dl-card-header">
+          <div class="dl-card-title-group">
+            <div class="dl-card-icon">
+              <svg class="spin-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                <path d="M12 2a10 10 0 0 1 10 10"/>
+              </svg>
+            </div>
+            <div class="dl-card-info">
+              <div class="dl-card-status">${downloadState.isAutoWatch ? '🎬 اكتملت المشاهدة! جاري الحفظ...' : 'جاري الحفظ في الذاكرة المحلية (أوفلاين)...'}</div>
+              <div class="dl-card-name" title="${cleanName}">${cleanName}</div>
+            </div>
+          </div>
+          <button class="dl-card-cancel-btn" title="إلغاء التحميل">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="dl-progress-bar-track">
+          <div class="dl-progress-bar-fill" style="width: 0%;"></div>
+        </div>
+
+        <div class="dl-card-footer">
+          <span class="dl-card-bytes">0 B / ${totalStr}</span>
+          <span class="dl-card-percent">0%</span>
+        </div>
+      `;
+
+      const cancelBtn = card.querySelector('.dl-card-cancel-btn');
+      cancelBtn.addEventListener('click', () => {
+        if (downloadState.abortCtrl) {
+          downloadState.abortCtrl.abort();
+        }
+      });
+
+      downloadProgressContainer.appendChild(card);
+      downloadState.cardEl = card;
+    }
+
+    function updateDownloadProgressUI(downloadState) {
+      const card = downloadState.cardEl;
+      if (!card) return;
+
+      const fill = card.querySelector('.dl-progress-bar-fill');
+      const percentEl = card.querySelector('.dl-card-percent');
+      const bytesEl = card.querySelector('.dl-card-bytes');
+
+      if (fill) fill.style.width = `${downloadState.percent}%`;
+      if (percentEl) percentEl.textContent = `${downloadState.percent}%`;
+      if (bytesEl) {
+        const recStr = formatBytes(downloadState.receivedBytes);
+        const totStr = downloadState.totalBytes ? formatBytes(downloadState.totalBytes) : '...';
+        bytesEl.textContent = `${recStr} / ${totStr}`;
+      }
+    }
+
+    function completeDownloadProgressUI(downloadState) {
+      const card = downloadState.cardEl;
+      if (!card) return;
+
+      card.classList.remove('error');
+      card.classList.add('completed');
+
+      const iconEl = card.querySelector('.dl-card-icon');
+      if (iconEl) {
+        iconEl.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        `;
+      }
+
+      const statusEl = card.querySelector('.dl-card-status');
+      if (statusEl) statusEl.textContent = '✅ تم الحفظ في الذاكرة بنجاح!';
+
+      const percentEl = card.querySelector('.dl-card-percent');
+      if (percentEl) percentEl.textContent = '100% جاهز أوفلاين';
+
+      const fill = card.querySelector('.dl-progress-bar-fill');
+      if (fill) fill.style.width = '100%';
+
+      const cancelBtn = card.querySelector('.dl-card-cancel-btn');
+      if (cancelBtn) cancelBtn.remove();
+
+      setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(12px)';
+        setTimeout(() => card.remove(), 400);
+      }, 4500);
+    }
+
+    function abortDownloadProgressUI(downloadState, reason = 'تم إلغاء الحفظ') {
+      const card = downloadState.cardEl;
+      if (!card) return;
+
+      card.classList.add('error');
+      const statusEl = card.querySelector('.dl-card-status');
+      if (statusEl) statusEl.textContent = `❌ ${reason}`;
+
+      const percentEl = card.querySelector('.dl-card-percent');
+      if (percentEl) percentEl.textContent = 'ملغي';
+
+      const cancelBtn = card.querySelector('.dl-card-cancel-btn');
+      if (cancelBtn) cancelBtn.remove();
+
+      setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(12px)';
+        setTimeout(() => card.remove(), 400);
+      }, 3500);
+    }
+
+    function errorDownloadProgressUI(downloadState, errMsg = 'تعذر الحفظ') {
+      const card = downloadState.cardEl;
+      if (!card) return;
+
+      card.classList.add('error');
+      const statusEl = card.querySelector('.dl-card-status');
+      if (statusEl) statusEl.textContent = `⚠️ فشل الحفظ: ${errMsg}`;
+
+      const percentEl = card.querySelector('.dl-card-percent');
+      if (percentEl) percentEl.textContent = 'خطأ';
+
+      const cancelBtn = card.querySelector('.dl-card-cancel-btn');
+      if (cancelBtn) cancelBtn.remove();
+
+      setTimeout(() => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(12px)';
+        setTimeout(() => card.remove(), 400);
+      }, 5000);
+    }
+
+    function updateCardDownloadUI(path) {
+      const card = itemsList.querySelector(`li[data-path="${CSS.escape(path)}"]`);
+      if (!card) return;
+      const cacheBtn = card.querySelector('.card-cache-btn');
+      if (!cacheBtn) return;
+      
+      const dl = activeDownloads.get(path);
+      if (dl) {
+        card.classList.add('is-downloading');
+        cacheBtn.className = 'card-cache-btn is-downloading';
+        cacheBtn.title = `جاري الحفظ: ${dl.percent}% (انقر للإلغاء)`;
+        cacheBtn.innerHTML = `
+          <svg class="spin-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+          <span>${dl.percent}%</span>
+        `;
+      } else {
+        card.classList.remove('is-downloading');
+        const isCached = cachedPathsSet.has(path);
+        cacheBtn.className = `card-cache-btn ${isCached ? 'is-cached' : ''}`;
+        cacheBtn.title = isCached ? 'محفوظ في جهازك - انقر لحذفه من الذاكرة' : 'حفظ هذا المقطع أوفلاين';
+        cacheBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+        `;
+      }
+    }
+
+    function updatePlayerFooterCacheBtn() {
+      if (!cacheCurrentBtn) return;
+      if (currentIndex === -1 || !allMediaItems[currentIndex]) {
+        cacheCurrentBtn.disabled = true;
+        cacheCurrentBtn.className = 'btn btn-cache';
+        cacheCurrentText.textContent = 'حفظ أوفلاين';
+        cacheCurrentIcon.className = '';
+        return;
+      }
+      cacheCurrentBtn.disabled = false;
+      const item = allMediaItems[currentIndex];
+      
+      if (activeDownloads.has(item.path)) {
+        const dl = activeDownloads.get(item.path);
+        cacheCurrentBtn.className = 'btn btn-cache is-downloading';
+        cacheCurrentText.textContent = `جاري الحفظ ${dl.percent}%`;
+        cacheCurrentIcon.className = 'spin-icon';
+        cacheCurrentBtn.title = `جاري الحفظ في الذاكرة المحلية (${dl.percent}%)... انقر للإلغاء`;
+      } else if (cachedPathsSet.has(item.path)) {
+        cacheCurrentBtn.className = 'btn btn-cache active-cached';
+        cacheCurrentText.textContent = 'محفوظ أوفلاين';
+        cacheCurrentIcon.className = '';
+        cacheCurrentBtn.title = 'المقطع محفوظ في جهازك للتشغيل بدون إنترنت (انقر لحذفه من الذاكرة)';
+      } else {
+        cacheCurrentBtn.className = 'btn btn-cache';
+        cacheCurrentText.textContent = 'حفظ أوفلاين';
+        cacheCurrentIcon.className = '';
+        cacheCurrentBtn.title = 'حفظ هذا المقطع في جهازك لمشاهدته بدون إنترنت';
+      }
+    }
+
+    async function downloadAndCacheStream(item, isAutoWatch = false) {
+      if (!item || !item.path) return;
+      if (cachedPathsSet.has(item.path)) {
+        showToast(`المقطع "${item.name || item.path.split('/').pop()}" محفوظ بالفعل محلياً 💾`, 'ℹ️');
+        return;
+      }
+      if (activeDownloads.has(item.path)) {
+        const existing = activeDownloads.get(item.path);
+        showToast(`جاري حفظ هذا المقطع بالفعل (${existing.percent}%)...`, '⏳');
+        return;
+      }
+
+      const abortCtrl = new AbortController();
+      const downloadState = {
+        item,
+        abortCtrl,
+        percent: 0,
+        receivedBytes: 0,
+        totalBytes: item.size || 0,
+        status: 'downloading',
+        isAutoWatch,
+        cardEl: null
+      };
+      activeDownloads.set(item.path, downloadState);
+
+      createDownloadProgressUI(downloadState);
+      updateCardDownloadUI(item.path);
+      updatePlayerFooterCacheBtn();
+
+      try {
+        const base = serverBase ? serverBase : '';
+        const streamUrl = `${base}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}&_v=${Date.now()}`;
+        const response = await fetch(streamUrl, {
+          signal: abortCtrl.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`استجابة السيرفر HTTP ${response.status}`);
+        }
+
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+          downloadState.totalBytes = parseInt(contentLength, 10);
+        } else if (!downloadState.totalBytes && item.size) {
+          downloadState.totalBytes = item.size;
+        }
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let lastUIUpdate = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          downloadState.receivedBytes += value.length;
+
+          if (downloadState.totalBytes > 0) {
+            downloadState.percent = Math.min(99, Math.round((downloadState.receivedBytes / downloadState.totalBytes) * 100));
+          }
+
+          const now = performance.now();
+          if (now - lastUIUpdate > 75) {
+            lastUIUpdate = now;
+            updateDownloadProgressUI(downloadState);
+            updateCardDownloadUI(item.path);
+            updatePlayerFooterCacheBtn();
+          }
+        }
+
+        downloadState.percent = 100;
+        updateDownloadProgressUI(downloadState);
+
+        const contentType = response.headers.get('content-type') || 'video/mp4';
+        const blob = new Blob(chunks, { type: contentType });
+
+        await OfflineVault.put(item, blob);
+        cachedPathsSet.add(item.path);
+        await updateStorageStats();
+
+        downloadState.status = 'completed';
+        completeDownloadProgressUI(downloadState);
+        activeDownloads.delete(item.path);
+
+        updateCardDownloadUI(item.path);
+        renderList();
+        updatePlayerFooterCacheBtn();
+
+        // If currently still playing this same item:
+        if (currentIndex !== -1 && allMediaItems[currentIndex] && allMediaItems[currentIndex].path === item.path) {
+          sourceBadgeTag.textContent = '⚡ تشغيل محلي (محفوظ أوفلاين)';
+          sourceBadgeTag.className = 'meta-tag emerald';
+          sourceBadgeTag.style.display = 'inline-flex';
+          sourceBadgeTag.title = 'يعمل بالكامل من ذاكرة جهازك وبدون اتصال بالإنترنت';
+
+          if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+          currentBlobUrl = URL.createObjectURL(blob);
+          const wasPaused = player.paused;
+          const currTime = player.currentTime;
+          player.src = currentBlobUrl;
+          player.currentTime = currTime;
+          if (!wasPaused) {
+            player.play().catch(() => {});
+          }
+        }
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          downloadState.status = 'aborted';
+          abortDownloadProgressUI(downloadState, 'تم إلغاء الحفظ');
+        } else {
+          console.error('Download stream error:', err);
+          downloadState.status = 'error';
+          errorDownloadProgressUI(downloadState, err.message || 'انقطع الاتصال');
+        }
+        activeDownloads.delete(item.path);
+        updateCardDownloadUI(item.path);
+        renderList();
+        updatePlayerFooterCacheBtn();
+      }
+    }
+
+    async function saveVideoToOfflineOnCompletion(item) {
+      if (!item || !item.path || cachedPathsSet.has(item.path) || activeDownloads.has(item.path)) return;
+      await downloadAndCacheStream(item, true);
+    }
+
+    async function cacheVideoManually(item) {
+      await downloadAndCacheStream(item, false);
+    }
+
+    // Remove single cached video
+    async function removeCachedVideo(path, name) {
+      await OfflineVault.delete(path);
+      cachedPathsSet.delete(path);
+      await updateStorageStats();
+      renderList();
+      updatePlayerFooterCacheBtn();
+      showToast(`تم حذف "${name || 'المقطع'}" من الذاكرة المحلية 🗑️`, 'ℹ️');
+
+      // If currently playing from deleted blob, update badge
+      if (currentIndex !== -1 && allMediaItems[currentIndex] && allMediaItems[currentIndex].path === path) {
+        sourceBadgeTag.textContent = '🌐 بث سحابي';
+        sourceBadgeTag.className = 'meta-tag';
+      }
+    }
+
+    // Download Item Trigger (File Download to Storage)
+    async function downloadItem(item) {
+      if (!item || !item.path) return;
+      const filename = item.name || item.path.split('/').pop() || 'media_file.mp4';
+
+      // 1. If already cached offline in IndexedDB, export directly to Android Storage
+      if (typeof cachedPathsSet !== 'undefined' && cachedPathsSet.has(item.path) && window.AndroidBridge && window.AndroidBridge.saveBase64ToStorage) {
+        try {
+          const cached = await OfflineVault.get(item.path);
+          if (cached && cached.blob) {
+            showToast(`جاري حفظ النسخة المخزنة في الذاكرة: ${filename}`, '💾');
+            const reader = new FileReader();
+            reader.onloadend = function() {
+              window.AndroidBridge.saveBase64ToStorage(reader.result, filename, cached.blob.type || 'video/mp4');
+            };
+            reader.readAsDataURL(cached.blob);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to export cached blob, fallback to network download', e);
+        }
+      }
+
+      // 2. Direct network stream download via Android system DownloadManager
+      const base = serverBase ? serverBase : '';
+      const streamUrl = `${base}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}&download=1`;
+
+      showToast(`جاري بدء تحميل: ${filename}`, '⬇️');
+
+      if (window.AndroidBridge && window.AndroidBridge.downloadFile) {
+        window.AndroidBridge.downloadFile(streamUrl, filename);
+        return;
+      }
+
+      const a = document.createElement('a');
+      a.href = streamUrl;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Download Current Playing Item
+    function downloadCurrentItem() {
+      if (currentIndex === -1 || !allMediaItems[currentIndex]) {
+        showToast('يرجى اختيار مقطع أولاً لتحميله', '⚠️');
+        return;
+      }
+      downloadItem(allMediaItems[currentIndex]);
+    }
+
+    downloadBtn.addEventListener('click', downloadCurrentItem);
+
+    cacheCurrentBtn.addEventListener('click', async () => {
+      if (currentIndex === -1 || !allMediaItems[currentIndex]) return;
+      const item = allMediaItems[currentIndex];
+      const cleanName = item.name || item.path.split('/').pop();
+
+      if (activeDownloads.has(item.path)) {
+        const dl = activeDownloads.get(item.path);
+        if (confirm(`هل تريد إلغاء تحميل وحفظ "${cleanName}"؟`)) {
+          if (dl.abortCtrl) dl.abortCtrl.abort();
+        }
+        return;
+      }
+
+      if (cachedPathsSet.has(item.path)) {
+        const confirmDel = confirm(`هل تريد حذف "${cleanName}" من الذاكرة المحلية؟`);
+        if (confirmDel) {
+          await removeCachedVideo(item.path, cleanName);
+        }
+        return;
+      }
+
+      await downloadAndCacheStream(item, false);
+    });
+
+    // Navigation (Next / Prev)
+    function playNext() {
+      const filtered = getFilteredItems();
+      if (filtered.length === 0) return;
+      
+      let nextIdx = 0;
+      if (currentIndex !== -1) {
+        const currItem = allMediaItems[currentIndex];
+        const fIdx = filtered.findIndex(x => x.path === currItem.path);
+        if (fIdx !== -1 && fIdx + 1 < filtered.length) {
+          nextIdx = fIdx + 1;
+        }
+      }
+      playItem(filtered[nextIdx]);
+    }
+
+    function playPrev() {
+      const filtered = getFilteredItems();
+      if (filtered.length === 0) return;
+
+      let prevIdx = filtered.length - 1;
+      if (currentIndex !== -1) {
+        const currItem = allMediaItems[currentIndex];
+        const fIdx = filtered.findIndex(x => x.path === currItem.path);
+        if (fIdx > 0) {
+          prevIdx = fIdx - 1;
+        }
+      }
+      playItem(filtered[prevIdx]);
+    }
+
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrev);
+
+    // Search events
+    searchInput.addEventListener('input', () => {
+      searchClearBtn.style.display = searchInput.value ? 'flex' : 'none';
+      renderList();
+    });
+
+    searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      searchInput.focus();
+      renderList();
+    });
+
+    refreshBtn.addEventListener('click', loadMediaItems);
+
+    // Tabs Filtering
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderList();
+      });
+    });
+
+    // Folder Dropdown Filter
+    if (folderSelect) {
+      folderSelect.addEventListener('change', (e) => {
+        setFolderFilter(e.target.value);
+      });
+    }
+
+    // Offline / Online Window Listeners
+    window.addEventListener('offline', () => {
+      serverStatusPill.className = 'server-status-pill offline';
+      serverStatusText.textContent = 'أوفلاين';
+      serverStatusPill.title = 'لا يوجد اتصال بالإنترنت - يتم العمل في وضع عدم الاتصال';
+      showToast('انقطع اتصال الإنترنت. يمكنك تشغيل الفيديوهات المحفوظة محلياً 💾', '📡');
+    });
+
+    window.addEventListener('online', () => {
+      serverStatusPill.className = 'server-status-pill';
+      serverStatusText.textContent = 'متصل';
+      showToast('تمت استعادة الاتصال بالإنترنت ✅', '🌐');
+      if (isOfflineMode) {
+        loadMediaItems();
+      }
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      handleUserActivity();
+
+      switch(e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (player.paused) player.play(); else player.pause();
+          break;
+        case 'KeyC':
+          toggleCinematicMode();
+          break;
+        case 'Escape':
+          if (isCinematicActive) {
+            exitCinematicMode();
+          }
+          break;
+        case 'KeyL':
+          isLoopSingle = !isLoopSingle;
+          updateLoopUI();
+          showToast(isLoopSingle ? 'تم تفعيل تكرار المقطع' : 'تم تفعيل الانتقال التلقائي للتالي', '🔁');
+          break;
+        case 'KeyS':
+          if (currentIndex !== -1 && allMediaItems[currentIndex]) {
+            const item = allMediaItems[currentIndex];
+            if (activeDownloads.has(item.path)) {
+              const dl = activeDownloads.get(item.path);
+              showToast(`جاري حفظ هذا المقطع بالفعل (${dl.percent}%)...`, '⏳');
+            } else if (cachedPathsSet.has(item.path)) {
+              showToast('المقطع الحالي محفوظ بالفعل محلياً 💾', 'ℹ️');
+            } else {
+              downloadAndCacheStream(item, false);
+            }
+          }
+          break;
+        case 'KeyD':
+          downloadCurrentItem();
+          break;
+        case 'KeyF':
+          toggleFullscreen();
+          break;
+        case 'KeyN':
+          playNext();
+          break;
+        case 'KeyP':
+          playPrev();
+          break;
+        case 'ArrowRight':
+          player.currentTime = Math.max(0, player.currentTime - 5);
+          break;
+        case 'ArrowLeft':
+          player.currentTime = Math.min(player.duration, player.currentTime + 5);
+          break;
+      }
+    });
+
+    // Storage Modal Open & Close
+    storageBtn.addEventListener('click', () => {
+      updateStorageStats();
+      storageModal.classList.add('open');
+    });
+
+    closeStorageModalBtn.addEventListener('click', () => {
+      storageModal.classList.remove('open');
+    });
+
+    closeStorageModalX.addEventListener('click', () => {
+      storageModal.classList.remove('open');
+    });
+
+    storageModal.addEventListener('click', (e) => {
+      if (e.target === storageModal) {
+        storageModal.classList.remove('open');
+      }
+    });
+
+    // Clear All Offline Data Button
+    clearAllCacheBtn.addEventListener('click', async () => {
+      const count = cachedPathsSet.size;
+      if (count === 0) {
+        showToast('لا توجد مقاطع محفوظة لمسحها', 'ℹ️');
+        return;
+      }
+      const confirmClear = confirm(`هل أنت متأكد من مسح جميع الفيديوهات المحفوظة محلياً (${count} مقطع) لتفريغ المساحة؟`);
+      if (!confirmClear) return;
+
+      await OfflineVault.clear();
+      cachedPathsSet.clear();
+      await updateStorageStats();
+      renderList();
+      updatePlayerFooterCacheBtn();
+      showToast('تم مسح جميع الفيديوهات المحفوظة بنجاح 🧹', '✅');
+
+      if (sourceBadgeTag.textContent.includes('محلي')) {
+        sourceBadgeTag.textContent = '🌐 بث سحابي';
+        sourceBadgeTag.className = 'meta-tag';
+      }
+    });
+
+    // Server Settings Modal
+    settingsBtn.addEventListener('click', () => {
+      const saved = localStorage.getItem('tv_server_host');
+      if (saved) {
+        serverHostInput.value = saved;
+      } else {
+        serverHostInput.value = isCurrentHttps() ? (isVercelHost() ? '(تلقائي - بروكسي Vercel الآمن)' : PROXY_SERVER) : DIRECT_SERVER;
+      }
+      settingsModal.classList.add('open');
+      serverHostInput.focus();
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+    });
+
+    closeSettingsModalX.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.remove('open');
+      }
+    });
+
+    resetSettingsBtn.addEventListener('click', () => {
+      localStorage.removeItem('tv_server_host');
+      serverBase = getActiveServerBase();
+      serverHostInput.value = isCurrentHttps() ? (isVercelHost() ? '(تلقائي - بروكسي Vercel الآمن)' : PROXY_SERVER) : DIRECT_SERVER;
+      showToast('تمت استعادة الضبط التلقائي الذكي', '🔄');
+      settingsModal.classList.remove('open');
+      loadMediaItems();
+    });
+
+    saveSettingsBtn.addEventListener('click', () => {
+      let val = serverHostInput.value.trim().replace(/\/+$/, '');
+      if (!val || val.includes('(تلقائي')) {
+        localStorage.removeItem('tv_server_host');
+        serverBase = getActiveServerBase();
+      } else {
+        if (isCurrentHttps() && val.startsWith('http://') && !val.includes('localhost') && !val.includes('127.0.0.1')) {
+          showToast('تنبيه: طلبات HTTP العادية على HTTPS تمنعها المتصفحات (Mixed Content)', '⚠️');
+        }
+        localStorage.setItem('tv_server_host', val);
+        serverBase = getActiveServerBase();
+      }
+      settingsModal.classList.remove('open');
+      showToast('تم حفظ وتحديث إعدادات السيرفر', '✅');
+      loadMediaItems();
+    });
+
+    // Initialize
+    updateLoopUI();
+    updatePlayerFooterCacheBtn();
+    OfflineVault.init().then(() => {
+      updateStorageStats();
+      loadMediaItems();
+    });
+  </script>
+</body>
+</html>

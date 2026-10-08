@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="telecloud_bg">#080c16</color>
+    <color name="telecloud_surface">#0e1526</color>
+    <color name="telecloud_accent">#0284c7</color>
+    <color name="telecloud_accent_light">#38bdf8</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>

@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeleVault Pro Explorer | متصفح ومحمل السحابة الذكي</title>
+  <style>
+    :root {
+      --bg-base: #080c16;
+      --bg-surface: #0e1526;
+      --bg-card: #131c31;
+      --bg-card-hover: #1a2744;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.14);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-light: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --danger: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", "Tajawal", Oxygen, Ubuntu, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom Slim Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Bar */
+    header {
+      background: rgba(14, 21, 38, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15.5px;
+      color: #fff;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .brand-text-accent {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .server-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 20px;
+      font-size: 11px;
+      color: #34d399;
+      font-weight: 500;
+      transition: var(--transition-fast);
+    }
+    .server-status-pill.offline {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #f87171;
+    }
+
+    .server-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulseDot 2.2s infinite ease-in-out;
+    }
+    .server-status-pill.offline .server-dot {
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+      animation: none;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Search Box */
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+      max-width: 580px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      color: var(--text-subtle);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(8, 12, 22, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 36px 8px 32px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+    .search-input:focus {
+      border-color: var(--accent-light);
+      background: rgba(8, 12, 22, 0.95);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .search-input::placeholder {
+      color: var(--text-subtle);
+      font-size: 12.5px;
+    }
+
+    .search-clear {
+      position: absolute;
+      left: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      display: none;
+      padding: 2px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-clear:hover {
+      color: var(--text-main);
+    }
+
+    /* Universal Buttons */
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      user-select: none;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border-color: var(--accent-light);
+      color: #fff;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    }
+
+    .btn-emerald {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+    .btn-emerald:hover {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #fff;
+      box-shadow: 0 0 14px var(--emerald-glow);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 11.5px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Subheader / Navigation Bar */
+    .nav-bar {
+      background: #0b1120;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .crumb {
+      color: var(--accent-light);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition-fast);
+      text-decoration: none;
+    }
+    .crumb:hover {
+      background: rgba(2, 132, 199, 0.15);
+    }
+    .crumb-sep {
+      color: var(--text-subtle);
+      font-size: 11px;
+    }
+    .crumb-current {
+      color: var(--text-main);
+      font-weight: 600;
+      padding: 3px 8px;
+    }
+
+    .type-filters {
+      display: flex;
+      gap: 5px;
+      background: rgba(8, 12, 22, 0.6);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+    .type-filter {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+    }
+    .type-filter:hover {
+      color: var(--text-main);
+    }
+    .type-filter.active {
+      background: var(--bg-card);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-header {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    /* Folders Grid */
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .folder-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+    .folder-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+    .folder-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(2, 132, 199, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-light);
+      flex-shrink: 0;
+    }
+    .folder-card.back-folder .folder-icon {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+    .folder-name {
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-main);
+    }
+
+    /* Files List */
+    .files-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .file-row {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all var(--transition-fast);
+    }
+    .file-row:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-light);
+      transform: translateX(-2px);
+    }
+
+    .file-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-media-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .file-media-badge.video { background: rgba(56, 189, 248, 0.12); color: #38bdf8; }
+    .file-media-badge.audio { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+    .file-media-badge.document { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .file-media-badge.apk { background: rgba(16, 185, 129, 0.12); color: #34d399; }
+    .file-media-badge.archive { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+
+    .file-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 4px;
+    }
+
+    .file-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+    }
+    .tag.accent {
+      color: var(--accent-light);
+      background: rgba(2, 132, 199, 0.1);
+      border-color: rgba(2, 132, 199, 0.2);
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Skeleton Loading Effect */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton-card {
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(90deg, rgba(19, 28, 49, 0.6) 25%, rgba(26, 39, 68, 0.9) 50%, rgba(19, 28, 49, 0.6) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 6px;
+    }
+
+    /* Modal for Server Settings */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 6, 12, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(2, 132, 199, 0.1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .modal h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .modal-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
+    .modal input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(8, 12, 22, 0.8);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 16px;
+      outline: none;
+      direction: ltr;
+      text-align: left;
+    }
+    .modal input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.3s;
+    }
+    @keyframes slideInToast {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-bar { flex-direction: column; align-items: stretch; }
+      .type-filters { justify-content: space-around; overflow-x: auto; }
+      .search-wrapper { max-width: none; }
+      .file-row { flex-direction: column; align-items: stretch; gap: 12px; }
+      .file-actions { justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo-icon" title="TeleVault Pro Explorer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.29 7 12 12 20.71 7"/>
+          <line x1="12" y1="22" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <span>TeleVault <span class="brand-text-accent">Downloader</span></span>
+      <span class="server-status-pill" id="serverStatusPill" title="جاري الفحص...">
+        <span class="server-dot"></span>
+        <span id="serverStatusText">متصل</span>
+      </span>
+    </div>
+
+    <div class="search-wrapper">
+      <span class="search-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+      </span>
+      <input type="text" id="searchInput" class="search-input" placeholder="بحث شامل في السحابة عن أي ملف للتحميل المباشر..." autocomplete="off">
+      <button id="searchClearBtn" class="search-clear" title="مسح البحث">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button id="refreshBtn" class="btn" title="تحديث المحتويات">
+        <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/>
+        </svg>
+        <span>تحديث</span>
+      </button>
+      <button id="settingsBtn" class="btn" title="إعدادات السيرفر">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>السيرفر</span>
+      </button>
+      <a href="index.html" class="btn btn-primary" title="الرجوع إلى مشغل الفيديو">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span>المشغل</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Navigation & Path Bar -->
+  <div class="nav-bar">
+    <div class="breadcrumbs" id="breadcrumbs">
+      <span class="crumb-current">🏠 الرئيسية</span>
+    </div>
+
+    <div class="type-filters">
+      <button class="type-filter active" data-filter="all">الكل</button>
+      <button class="type-filter" data-filter="video">🎬 فيديوهات</button>
+      <button class="type-filter" data-filter="document">📄 مستندات</button>
+      <button class="type-filter" data-filter="audio">🎵 صوتيات</button>
+    </div>
+  </div>
+
+  <!-- Main View -->
+  <main class="main-content" id="mainContent">
+    
+    <!-- Folders Section -->
+    <div id="foldersSection" style="display: none;">
+      <div class="section-header">
+        <span>المجلدات (<span id="foldersCount">0</span>)</span>
+      </div>
+      <div class="folders-grid" id="foldersGrid"></div>
+    </div>
+
+    <!-- Files Section -->
+    <div id="filesSection">
+      <div class="section-header">
+        <span>الملفات (<span id="filesCount">0</span>)</span>
+        <span id="folderTotalSize" style="font-size: 11px; color: var(--text-muted);"></span>
+      </div>
+      <div class="files-list" id="filesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Server Settings Modal -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          إعدادات سيرفر TeleVault
+        </h3>
+      </div>
+      <p class="modal-desc">أدخل عنوان الخادم أو استخدم البروكسي التلقائي الآمن (HTTPS) لتجنب حظر المتصفح:</p>
+      <input type="text" id="serverHostInput" placeholder="https://... أو فارغ للافتراضي" spellcheck="false">
+      <div class="modal-actions">
+        <button class="btn" id="resetSettingsBtn" type="button" title="استعادة الضبط التلقائي">🔄 تلقائي</button>
+        <button class="btn" id="closeSettingsBtn">إلغاء</button>
+        <button class="btn btn-primary" id="saveSettingsBtn">حفظ وتحديث الاتصال</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // --- Configuration & Host Resolution ---
+    const DIRECT_SERVER = 'http://51.170.138.59:8080';
+    const PROXY_SERVER = 'https://ayoub314.vercel.app';
+
+    function isAndroidApp() {
+      return Boolean(window.AndroidBridge || (window.location && window.location.hostname.includes('androidplatform.net')));
+    }
+
+    function isCurrentHttps() {
+      return window.location.protocol === 'https:';
+    }
+
+    function isVercelHost() {
+      const h = window.location.hostname;
+      return h.endsWith('vercel.app') || h.includes('vercel');
+    }
+
+    function getActiveServerBase() {
+      const saved = localStorage.getItem('tv_server_host');
+      const isHttps = isCurrentHttps() && !isAndroidApp();
+
+      if (saved && saved.trim()) {
+        const clean = saved.trim().replace(/\/+$/, '');
+        if (isHttps && clean.startsWith('http://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
+          console.warn('[TeleCloud] Direct HTTP server blocked on HTTPS to prevent Mixed Content. Falling back to proxy.');
+          return isVercelHost() ? '' : PROXY_SERVER;
+        }
+        return clean;
+      }
+
+      if (isHttps) {
+        if (isVercelHost() || window.location.hostname === 'localhost') {
+          return '';
+        }
+        return PROXY_SERVER;
+      }
+
+      return DIRECT_SERVER;
+    }
+
+    let serverBase = getActiveServerBase();
+    let currentPath = '';
+    let currentFilter = 'all';
+    let rawItems = [];
+    let isSearchMode = false;
+
+    // DOM Elements
+    const serverStatusPill = document.getElementById('serverStatusPill');
+    const serverStatusText = document.getElementById('serverStatusText');
+    const searchInput = document.getElementById('searchInput');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    const foldersSection = document.getElementById('foldersSection');
+    const foldersGrid = document.getElementById('foldersGrid');
+    const foldersCount = document.getElementById('foldersCount');
+    const filesSection = document.getElementById('filesSection');
+    const filesList = document.getElementById('filesList');
+    const filesCount = document.getElementById('filesCount');
+    const folderTotalSize = document.getElementById('folderTotalSize');
+    const settingsModal = document.getElementById('settingsModal');
+    const serverHostInput = document.getElementById('serverHostInput');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const toastContainer = document.getElementById('toastContainer');
+    const typeFilters = document.querySelectorAll('.type-filter');
+
+    // Utility: Format bytes
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    // Utility: Toast notifications
+    function showToast(message, icon = 'ℹ️') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Utility: Categorize and get SVG Icon
+    function getFileCategory(mediaType, filename) {
+      const ext = (filename || '').split('.').pop().toLowerCase();
+      if (mediaType === 'video' || ['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) {
+        return {
+          type: 'video',
+          name: 'فيديو',
+          svg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>`
+        };
+      }
+      if (mediaType === 'audio' || ['mp3', 'wav', 'm4a', 'flac', 'aac', 'opus'].includes(ext)) {
+        return {
+          type: 'audio',
+          name: 'صوت',
+          svg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`
+        };
+      }
+      if (['apk'].includes(ext)) {
+        return {
+          type: 'apk',
+          name: 'تطبيق APK',
+          svg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>`
+        };
+      }
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+        return {
+          type: 'archive',
+          name: 'أرشيف مضغوط',
+          svg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect width="22" height="5" x="1" y="3"/><line x1="10" x2="14" y1="12" y2="12"/></svg>`
+        };
+      }
+      return {
+        type: 'document',
+        name: 'مستند',
+        svg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>`
+      };
+    }
+
+    // Copy Download Link to Clipboard (e.g. for IDM / external managers)
+    function copyDownloadLink(file) {
+      const base = serverBase ? serverBase : '';
+      const url = `${base}/api/tg-cloud/stream?path=${encodeURIComponent(file.path)}&download=1`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('تم نسخ رابط التحميل المباشر! جاهز للصق في IDM', '📋');
+      }).catch(() => {
+        prompt('انسخ رابط التحميل المباشر يدوياً:', url);
+      });
+    }
+
+    // Direct Download Trigger
+    function downloadFile(file) {
+      const base = serverBase ? serverBase : '';
+      const url = `${base}/api/tg-cloud/stream?path=${encodeURIComponent(file.path)}&download=1`;
+      const filename = file.name || file.path.split('/').pop() || 'file';
+
+      showToast(`جاري بدء تنزيل: ${filename}`, '⬇️');
+
+      if (window.AndroidBridge && window.AndroidBridge.downloadFile) {
+        window.AndroidBridge.downloadFile(url, filename);
+        return;
+      }
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Update Breadcrumbs
+    function updateBreadcrumbs() {
+      breadcrumbs.innerHTML = '';
+
+      if (isSearchMode) {
+        const homeCrumb = document.createElement('span');
+        homeCrumb.className = 'crumb';
+        homeCrumb.innerHTML = '🏠 الرئيسية';
+        homeCrumb.onclick = exitSearch;
+        breadcrumbs.appendChild(homeCrumb);
+
+        const sep = document.createElement('span');
+        sep.className = 'crumb-sep';
+        sep.textContent = '/';
+        breadcrumbs.appendChild(sep);
+
+        const current = document.createElement('span');
+        current.className = 'crumb-current';
+        current.textContent = 'نتائج البحث السحابي';
+        breadcrumbs.appendChild(current);
+        return;
+      }
+
+      if (!currentPath) {
+        const current = document.createElement('span');
+        current.className = 'crumb-current';
+        current.textContent = '🏠 الرئيسية';
+        breadcrumbs.appendChild(current);
+        return;
+      }
+
+      const homeCrumb = document.createElement('span');
+      homeCrumb.className = 'crumb';
+      homeCrumb.innerHTML = '🏠 الرئيسية';
+      homeCrumb.onclick = () => navigateTo('');
+      breadcrumbs.appendChild(homeCrumb);
+
+      const parts = currentPath.split('/').filter(Boolean);
+      let accPath = '';
+
+      parts.forEach((p, idx) => {
+        accPath += (idx === 0 ? '' : '/') + p;
+        const targetPath = accPath;
+
+        const sep = document.createElement('span');
+        sep.className = 'crumb-sep';
+        sep.textContent = '/';
+        breadcrumbs.appendChild(sep);
+
+        if (idx === parts.length - 1) {
+          const current = document.createElement('span');
+          current.className = 'crumb-current';
+          current.textContent = p;
+          breadcrumbs.appendChild(current);
+        } else {
+          const crumb = document.createElement('span');
+          crumb.className = 'crumb';
+          crumb.textContent = p;
+          crumb.onclick = () => navigateTo(targetPath);
+          breadcrumbs.appendChild(crumb);
+        }
+      });
+    }
+
+    // Show skeletons while loading
+    function renderSkeletons() {
+      filesList.innerHTML = Array(6).fill('<div class="skeleton-card"></div>').join('');
+    }
+
+    // Load Items in Current Folder
+    async function loadFolder(path = '') {
+      isSearchMode = false;
+      currentPath = path;
+      updateBreadcrumbs();
+      renderSkeletons();
+      foldersSection.style.display = 'none';
+
+      // Spin refresh button icon
+      refreshIcon.style.transition = 'transform 0.6s ease';
+      refreshIcon.style.transform = 'rotate(360deg)';
+      setTimeout(() => {
+        refreshIcon.style.transition = 'none';
+        refreshIcon.style.transform = 'rotate(0deg)';
+      }, 600);
+
+      try {
+        const base = serverBase ? serverBase : '';
+        const url = `${base}/api/tg-cloud/items?path=${encodeURIComponent(path)}&_t=${Date.now()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.items)) {
+          rawItems = data.items;
+          serverStatusPill.className = 'server-status-pill';
+          serverStatusText.textContent = 'متصل';
+          const displayHost = serverBase || (isCurrentHttps() ? 'بروكسي Vercel الآمن (HTTPS)' : DIRECT_SERVER);
+          serverStatusPill.title = 'متصل بالسيرفر: ' + displayHost;
+          renderItems();
+        } else {
+          throw new Error('استجابة غير صالحة من السيرفر');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        serverStatusPill.className = 'server-status-pill offline';
+        serverStatusText.textContent = 'غير متصل';
+        serverStatusPill.title = 'فشل الاتصال: ' + err.message;
+        
+        filesList.innerHTML = `
+          <div style="text-align: center; padding: 40px 16px; color: var(--danger); font-size: 13px; line-height: 1.6;">
+            <div style="font-size: 26px; margin-bottom: 8px;">⚠️</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">تعذر الاتصال بالسيرفر</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px;">${err.message}</div>
+            <button class="btn btn-primary" onclick="loadFolder(currentPath)" style="margin: 0 auto;">إعادة المحاولة</button>
+          </div>
+        `;
+      }
+    }
+
+    // Render Items
+    function renderItems() {
+      let folders = rawItems.filter(it => it.type === 'folder');
+      let files = rawItems.filter(it => it.type === 'file');
+
+      // Filter by media type
+      if (currentFilter !== 'all') {
+        files = files.filter(f => {
+          const cat = getFileCategory(f.media_type, f.name || f.path);
+          return cat.type === currentFilter;
+        });
+      }
+
+      // Render Folders
+      if (!isSearchMode && (folders.length > 0 || currentPath)) {
+        foldersSection.style.display = 'block';
+        foldersGrid.innerHTML = '';
+        let totalFolderCount = folders.length;
+
+        // Add back card if in subfolder
+        if (currentPath) {
+          const parts = currentPath.split('/').filter(Boolean);
+          parts.pop();
+          const parentPath = parts.join('/');
+          
+          const backCard = document.createElement('div');
+          backCard.className = 'folder-card back-folder';
+          backCard.innerHTML = `
+            <div class="folder-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </div>
+            <div class="folder-name">.. [مجلد للأعلى]</div>
+          `;
+          backCard.onclick = () => navigateTo(parentPath);
+          foldersGrid.appendChild(backCard);
+        }
+
+        folders.forEach(folder => {
+          const fCard = document.createElement('div');
+          fCard.className = 'folder-card';
+          fCard.innerHTML = `
+            <div class="folder-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+              </svg>
+            </div>
+            <div class="folder-name" title="${folder.name}">${folder.name}</div>
+          `;
+          fCard.onclick = () => navigateTo(folder.path);
+          foldersGrid.appendChild(fCard);
+        });
+
+        foldersCount.textContent = totalFolderCount;
+      } else {
+        foldersSection.style.display = 'none';
+      }
+
+      // Render Files
+      filesCount.textContent = files.length;
+      const totalBytes = files.reduce((acc, f) => acc + (f.size || 0), 0);
+      folderTotalSize.textContent = totalBytes > 0 ? `الحجم الإجمالي: ${formatBytes(totalBytes)}` : '';
+
+      if (files.length === 0) {
+        filesList.innerHTML = `
+          <div style="text-align: center; padding: 50px 16px; color: var(--text-muted); font-size: 13px;">
+            <div style="font-size: 26px; margin-bottom: 8px; opacity: 0.5;">📁</div>
+            <div>لا توجد ملفات مطابقة في هذا المجلد.</div>
+          </div>
+        `;
+        return;
+      }
+
+      filesList.innerHTML = '';
+      files.forEach(file => {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+
+        const cleanName = file.name || file.path.split('/').pop();
+        const cat = getFileCategory(file.media_type, cleanName);
+        const sizeStr = formatBytes(file.size);
+        const dateStr = file.created_at ? file.created_at.split(' ')[0] : '';
+        const folderTag = (isSearchMode && file.folder_name) ? `<span class="tag">📁 ${file.folder_name}</span>` : '';
+
+        row.innerHTML = `
+          <div class="file-main">
+            <div class="file-media-badge ${cat.type}">
+              ${cat.svg}
+            </div>
+            <div class="file-details">
+              <div class="file-title" title="${cleanName}">${cleanName}</div>
+              <div class="file-meta">
+                <span class="tag accent">${cat.name}</span>
+                <span>💾 ${sizeStr}</span>
+                ${folderTag}
+                ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          
+          <div class="file-actions">
+            <!-- Direct Download Button -->
+            <button class="btn btn-emerald btn-sm dl-action-btn" title="تحميل الملف مباشرة إلى جهازك">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              <span>تحميل</span>
+            </button>
+
+            <!-- Copy Link Button (IDM / External Downloader) -->
+            <button class="btn btn-sm copy-action-btn" title="نسخ رابط التحميل المباشر لبرامج التنزيل مثل IDM">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+              <span>نسخ الرابط</span>
+            </button>
+          </div>
+        `;
+
+        // Event-based safe binding (avoids any string escaping issues with file paths)
+        row.querySelector('.dl-action-btn').addEventListener('click', () => downloadFile(file));
+        row.querySelector('.copy-action-btn').addEventListener('click', () => copyDownloadLink(file));
+
+        filesList.appendChild(row);
+      });
+    }
+
+    // Navigation
+    function navigateTo(path) {
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      loadFolder(path);
+    }
+
+    function exitSearch() {
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      loadFolder(currentPath);
+    }
+
+    // Global Search Across Cloud
+    let searchTimeout = null;
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim();
+      searchClearBtn.style.display = q ? 'flex' : 'none';
+      clearTimeout(searchTimeout);
+
+      if (!q) {
+        if (isSearchMode) exitSearch();
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        isSearchMode = true;
+        updateBreadcrumbs();
+        foldersSection.style.display = 'none';
+        renderSkeletons();
+
+        try {
+          const base = serverBase ? serverBase : '';
+          const res = await fetch(`${base}/api/tg-cloud/search?q=${encodeURIComponent(q)}`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+
+          if (data.success && Array.isArray(data.items)) {
+            rawItems = data.items.map(it => ({ ...it, type: 'file' }));
+            renderItems();
+          } else {
+            filesList.innerHTML = `
+              <div style="text-align: center; padding: 50px 16px; color: var(--text-muted); font-size: 13px;">
+                <div style="font-size: 26px; margin-bottom: 8px; opacity: 0.5;">🔍</div>
+                <div>لا توجد نتائج بحث مطابقة.</div>
+              </div>
+            `;
+          }
+        } catch (err) {
+          filesList.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--danger); font-size: 13px;">خطأ في البحث: ${err.message}</div>`;
+        }
+      }, 250);
+    });
+
+    searchClearBtn.addEventListener('click', () => {
+      exitSearch();
+      searchInput.focus();
+    });
+
+    // Filters
+    typeFilters.forEach(btn => {
+      btn.addEventListener('click', () => {
+        typeFilters.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderItems();
+      });
+    });
+
+    // Refresh
+    refreshBtn.addEventListener('click', () => {
+      if (isSearchMode) {
+        searchInput.dispatchEvent(new Event('input'));
+      } else {
+        loadFolder(currentPath);
+      }
+    });
+
+    // Settings Modal
+    settingsBtn.addEventListener('click', () => {
+      const saved = localStorage.getItem('tv_server_host');
+      if (saved) {
+        serverHostInput.value = saved;
+      } else {
+        serverHostInput.value = isCurrentHttps() ? (isVercelHost() ? '(تلقائي - بروكسي Vercel الآمن)' : PROXY_SERVER) : DIRECT_SERVER;
+      }
+      settingsModal.classList.add('open');
+      serverHostInput.focus();
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.remove('open');
+      }
+    });
+
+    resetSettingsBtn.addEventListener('click', () => {
+      localStorage.removeItem('tv_server_host');
+      serverBase = getActiveServerBase();
+      serverHostInput.value = isCurrentHttps() ? (isVercelHost() ? '(تلقائي - بروكسي Vercel الآمن)' : PROXY_SERVER) : DIRECT_SERVER;
+      showToast('تمت استعادة الضبط التلقائي الذكي', '🔄');
+      settingsModal.classList.remove('open');
+      loadFolder(currentPath);
+    });
+
+    saveSettingsBtn.addEventListener('click', () => {
+      let val = serverHostInput.value.trim().replace(/\/+$/, '');
+      if (!val || val.includes('(تلقائي')) {
+        localStorage.removeItem('tv_server_host');
+        serverBase = getActiveServerBase();
+      } else {
+        if (isCurrentHttps() && val.startsWith('http://') && !val.includes('localhost') && !val.includes('127.0.0.1')) {
+          showToast('تنبيه: طلبات HTTP العادية على HTTPS تمنعها المتصفحات (Mixed Content)', '⚠️');
+        }
+        localStorage.setItem('tv_server_host', val);
+        serverBase = getActiveServerBase();
+      }
+      settingsModal.classList.remove('open');
+      showToast('تم حفظ وتحديث إعدادات السيرفر', '✅');
+      loadFolder(currentPath);
+    });
+
+    // Start
+    loadFolder('');
+  </script>
+</body>
+</html>
