@@ -3,7 +3,6 @@ package com.acmods.telecloud
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DownloadManager
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,10 +11,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
-import android.util.Base64
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -30,7 +28,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
-import java.io.File
+import java.net.URLDecoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,14 +47,13 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.entries.all { it.value }
             if (allGranted) {
-                Toast.makeText(this, "تم منح الصلاحيات بنجاح", Toast.LENGTH_SHORT).show()
                 val url = pendingDownloadUrl
                 val name = pendingDownloadFilename
                 if (url != null && name != null) {
                     enqueueDownload(url, name)
                 }
             } else {
-                Toast.makeText(this, "تتطلب عملية التحميل صلاحيات التخزين والإشعارات", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "تتطلب عملية التحميل الإذن للمتابعة", Toast.LENGTH_SHORT).show()
             }
             pendingDownloadUrl = null
             pendingDownloadFilename = null
@@ -84,9 +81,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Void Dark UI System bars (#080c16)
-        window.statusBarColor = Color.parseColor("#080c16")
-        window.navigationBarColor = Color.parseColor("#080c16")
+        // AMOLED / Dark Space System Bars (#090D16)
+        window.statusBarColor = Color.parseColor("#090D16")
+        window.navigationBarColor = Color.parseColor("#090D16")
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
@@ -97,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#080c16"))
+            setBackgroundColor(Color.parseColor("#090D16"))
         }
 
         webView = WebView(this).apply {
@@ -105,20 +102,18 @@ class MainActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#080c16"))
+            setBackgroundColor(Color.parseColor("#090D16"))
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             overScrollMode = View.OVER_SCROLL_NEVER
 
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
-                databaseEnabled = true
                 allowFileAccess = true
                 allowContentAccess = true
                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 cacheMode = WebSettings.LOAD_DEFAULT
                 mediaPlaybackRequiresUserGesture = false
-                offscreenPreRaster = true
                 useWideViewPort = true
                 loadWithOverviewMode = true
                 setSupportZoom(false)
@@ -129,16 +124,16 @@ class MainActivity : AppCompatActivity() {
         rootContainer.addView(webView)
         setContentView(rootContainer)
 
-        // Javascript Bridge for Storage & Native Downloads
+        // Javascript Bridge for Native Video & Storage
         webView.addJavascriptInterface(AndroidBridge(this), "AndroidBridge")
 
-        // Download listener for any standard web downloads
-        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
+        // Intercept standard downloads if triggered directly
+        webView.setDownloadListener { url, _, contentDisposition, mimetype, _ ->
             val filename = URLUtil.guessFileName(url, contentDisposition, mimetype)
             startDownload(url, filename)
         }
 
-        // High-Security Local Origin Asset Loader
+        // Fast Local Origin Asset Loader
         val assetLoader = WebViewAssetLoader.Builder()
             .setDomain("appassets.androidplatform.net")
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -160,7 +155,6 @@ class MainActivity : AppCompatActivity() {
                 return if (url.startsWith("https://appassets.androidplatform.net")) {
                     false
                 } else if (url.contains("/api/tg-cloud/stream") && (url.contains("download=1") || url.contains(".mp4"))) {
-                    // Direct stream download
                     val filename = URLUtil.guessFileName(url, null, "video/mp4")
                     startDownload(url, filename)
                     true
@@ -192,11 +186,12 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                // Hide system bars in full screen video
+                // Fullscreen immersive mode
                 val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
                 windowInsetsController.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
 
             override fun onHideCustomView() {
@@ -209,6 +204,7 @@ class MainActivity : AppCompatActivity() {
 
                 val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
                 windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
 
             override fun onShowFileChooser(
@@ -267,16 +263,16 @@ class MainActivity : AppCompatActivity() {
                         finish()
                     } else {
                         lastBackPressTime = now
-                        Toast.makeText(this@MainActivity, "اضغط رجوع مرة أخرى للخروج من TeleCloud", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "اضغط رجوع مرة أخرى للخروج من التطبيق", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         })
 
-        // Check and request storage & notification permissions on launch
+        // Initial permissions check (only if strictly required)
         checkAndRequestPermissions()
 
-        // Launch TeleCloud App on local HTTPS secure origin
+        // Launch TeleCloud UI
         webView.loadUrl("https://appassets.androidplatform.net/assets/web/index.html")
     }
 
@@ -284,12 +280,8 @@ class MainActivity : AppCompatActivity() {
         val list = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             list.add(Manifest.permission.POST_NOTIFICATIONS)
-            list.add(Manifest.permission.READ_MEDIA_VIDEO)
         } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             list.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            list.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        } else {
-            list.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
         return list.toTypedArray()
     }
@@ -324,55 +316,44 @@ class MainActivity : AppCompatActivity() {
 
     private fun enqueueDownload(url: String, filename: String) {
         try {
-            val cleanName = filename.ifEmpty { "telecloud_" + System.currentTimeMillis() + ".mp4" }
+            var cleanName = filename.trim().ifEmpty { "telecloud_video_" + System.currentTimeMillis() + ".mp4" }
+            try {
+                cleanName = URLDecoder.decode(cleanName, "UTF-8")
+            } catch (_: Exception) {}
+
+            cleanName = cleanName.replace(Regex("[/\\\\?%*:|\"<>]"), "_")
+            if (!cleanName.endsWith(".mp4", ignoreCase = true) && !cleanName.contains(".")) {
+                cleanName += ".mp4"
+            }
+
             val uri = Uri.parse(url)
             val request = DownloadManager.Request(uri).apply {
                 setTitle(cleanName)
-                setDescription("TeleCloud - جاري التحميل إلى التخزين")
+                setDescription("TeleCloud - جاري التحميل")
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName)
                 setAllowedOverMetered(true)
                 setAllowedOverRoaming(true)
+                setMimeType("video/mp4")
             }
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
-            Toast.makeText(this, "جاري بدء تحميل: $cleanName في مجلد التنزيلات (Download)", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "جاري بدء تحميل: $cleanName في التنزيلات", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "خطأ في بدء التحميل: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "تعذر بدء التحميل: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    fun saveBase64ToPublicStorage(base64Data: String, filename: String, mimeType: String) {
+    fun openExternalPlayer(url: String, title: String) {
         try {
-            val cleanBase64 = if (base64Data.contains(",")) base64Data.substringAfter(",") else base64Data
-            val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
-            val cleanName = filename.ifEmpty { "telecloud_offline_" + System.currentTimeMillis() + ".mp4" }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, cleanName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, mimeType.ifEmpty { "video/mp4" })
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                }
-                val resolver = contentResolver
-                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-                if (uri != null) {
-                    resolver.openOutputStream(uri)?.use { outputStream ->
-                        outputStream.write(bytes)
-                    }
-                    Toast.makeText(this, "تم حفظ الملف بنجاح في مجلد التنزيلات (Download)", Toast.LENGTH_LONG).show()
-                } else {
-                    throw Exception("تعذر إنشاء الملف في التخزين")
-                }
-            } else {
-                val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                if (!dir.exists()) dir.mkdirs()
-                val file = File(dir, cleanName)
-                file.outputStream().use { it.write(bytes) }
-                Toast.makeText(this, "تم حفظ الملف بنجاح: ${file.name}", Toast.LENGTH_LONG).show()
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(Uri.parse(url), "video/*")
+                putExtra(Intent.EXTRA_TITLE, title)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            startActivity(Intent.createChooser(intent, "تشغيل بواسطة..."))
         } catch (e: Exception) {
-            Toast.makeText(this, "خطأ في حفظ الملف: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "لا يوجد مشغل فيديو مثبت على الجهاز", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -402,9 +383,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun saveBase64ToStorage(base64Data: String, filename: String, mimeType: String) {
+        fun openExternalPlayer(url: String, title: String) {
             activity.runOnUiThread {
-                activity.saveBase64ToPublicStorage(base64Data, filename, mimeType)
+                activity.openExternalPlayer(url, title)
+            }
+        }
+
+        @JavascriptInterface
+        fun setKeepScreenOn(keepOn: Boolean) {
+            activity.runOnUiThread {
+                if (keepOn) {
+                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun showToast(message: String) {
+            activity.runOnUiThread {
+                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
             }
         }
 

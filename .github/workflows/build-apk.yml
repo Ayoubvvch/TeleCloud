@@ -33,37 +33,38 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/app-debug.apk release-output/TeleCloud-v1.0.0.apk
+          cp app/build/outputs/apk/debug/app-debug.apk release-output/TeleCloud-v2.0.0.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeleCloud-v1.0.0-APK
-          path: release-output/TeleCloud-v1.0.0.apk
+          name: TeleCloud-v2.0.0-APK
+          path: release-output/TeleCloud-v2.0.0.apk
           if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.0.0
-          name: "TeleCloud v1.0.0 - Smart Cloud Media Player & Downloader"
+          tag_name: v2.0.0
+          name: "TeleCloud v2.0.0 - Clean & Ultra-Fast Cloud Streamer"
           body: |
-            ### ⚡ TeleCloud v1.0.0: Smart Cloud Media Player & Downloader Android APK
+            ### ⚡ TeleCloud v2.0.0: Ultra-Fast, 100% Clean Cloud Video Streamer & Downloader
 
-            - **Native Storage Downloads & Permissions:**
-              - Saves downloaded media directly to Android's storage (`/sdcard/Download/`).
-              - Native Android `DownloadManager` integration with background downloads & status bar notifications.
-              - Export offline cached IndexedDB media directly to public storage without re-downloading.
-            - **Modern High-Performance Web Engine:**
-              - Built with `WebViewAssetLoader` serving local assets securely.
-              - Hardware-accelerated GPU layer with smooth streaming playback.
-              - Cleartext traffic and mixed-content support for direct high-speed HTTP cloud streaming.
-            - **Native Device Features:**
-              - Fullscreen video playback with automated status bar hide/restore.
-              - Deep Space Navy dark theme `#080C16`.
-              - Custom Cloud & Stream vector launcher icons.
-              - Double back-tap navigation.
-          files: release-output/TeleCloud-v1.0.0.apk
+            - **خفيف ونقي 100% (Zero Bloat):**
+              - إزالة كافة الميزات الثقيلة وغير الضرورية والتخزين المؤقت المعقد الذي كان يسبب بطء التطبيق واستهلاك الذاكرة.
+              - واجهة سوداء AMOLED حديثة وخفيفة للغاية وسريعة الاستجابة بأقل استهلاك للمعالج والبطارية.
+            - **مشاهدة فائقة الخفة والسرعة (Ultra-Smooth Streaming):**
+              - بث مباشر وفوري لمقاطع السحابة عبر مشغل فيديو مخصص وسريع.
+              - دعم كامل للتحكم بالسرعة (1x, 1.25x, 1.5x, 2x) وتكرار المقطع (Loop) أو التشغيل التلقائي للتالي.
+              - إبقاء الشاشة مفعلة تلقائياً أثناء تشغيل الفيديو (`Keep Screen On`).
+              - خيار تشغيل فوري عبر مشغلات خارجية مثل VLC و MX Player بضغطة زر واحدة.
+            - **تحميل مباشر ونظيف (1-Tap Native Download):**
+              - تحميل مباشر بنقرة واحدة عبر `DownloadManager` الرسمي لنظام أندرويد.
+              - إشعارات التحميل بالنظام، استكمال التحميل عند انقطاع الاتصال، وحفظ فوري في مجلد `Download`.
+            - **تنقل وفلترة سريعة:**
+              - بحث فوري وسلس أثناء الكتابة.
+              - فلاتر وتصنيفات المجلدات التلقائية.
+          files: release-output/TeleCloud-v2.0.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
