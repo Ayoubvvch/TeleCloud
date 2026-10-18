@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build TeleCloud APK
+    name: Build Signed TeleCloud APK
     runs-on: ubuntu-latest
 
     steps:
@@ -27,44 +27,46 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build Signed Release APK
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/app-debug.apk release-output/TeleCloud-v2.0.0.apk
+          cp app/build/outputs/apk/release/app-release.apk release-output/TeleCloud-v2.1.0.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeleCloud-v2.0.0-APK
-          path: release-output/TeleCloud-v2.0.0.apk
+          name: TeleCloud-v2.1.0-APK
+          path: release-output/TeleCloud-v2.1.0.apk
           if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v2.0.0
-          name: "TeleCloud v2.0.0 - Clean & Ultra-Fast Cloud Streamer"
+          tag_name: v2.1.0
+          name: "TeleCloud v2.1.0 - Full English, Signed APK & In-App Updates"
           body: |
-            ### ⚡ TeleCloud v2.0.0: Ultra-Fast, 100% Clean Cloud Video Streamer & Downloader
+            ### ⚡ TeleCloud v2.1.0: Signed In-Place Updates & Modern English UI
 
-            - **خفيف ونقي 100% (Zero Bloat):**
-              - إزالة كافة الميزات الثقيلة وغير الضرورية والتخزين المؤقت المعقد الذي كان يسبب بطء التطبيق واستهلاك الذاكرة.
-              - واجهة سوداء AMOLED حديثة وخفيفة للغاية وسريعة الاستجابة بأقل استهلاك للمعالج والبطارية.
-            - **مشاهدة فائقة الخفة والسرعة (Ultra-Smooth Streaming):**
-              - بث مباشر وفوري لمقاطع السحابة عبر مشغل فيديو مخصص وسريع.
-              - دعم كامل للتحكم بالسرعة (1x, 1.25x, 1.5x, 2x) وتكرار المقطع (Loop) أو التشغيل التلقائي للتالي.
-              - إبقاء الشاشة مفعلة تلقائياً أثناء تشغيل الفيديو (`Keep Screen On`).
-              - خيار تشغيل فوري عبر مشغلات خارجية مثل VLC و MX Player بضغطة زر واحدة.
-            - **تحميل مباشر ونظيف (1-Tap Native Download):**
-              - تحميل مباشر بنقرة واحدة عبر `DownloadManager` الرسمي لنظام أندرويد.
-              - إشعارات التحميل بالنظام، استكمال التحميل عند انقطاع الاتصال، وحفظ فوري في مجلد `Download`.
-            - **تنقل وفلترة سريعة:**
-              - بحث فوري وسلس أثناء الكتابة.
-              - فلاتر وتصنيفات المجلدات التلقائية.
-          files: release-output/TeleCloud-v2.0.0.apk
+            - **Persistent Cryptographic Signing:**
+              - Officially signed with a permanent release keystore.
+              - In-place updates: No more uninstalling previous versions to update!
+            - **100% Modern English UI (AMOLED Dark):**
+              - Clean internationalized English interface with improved typography.
+              - Intuitive controls, category filters, and live search.
+            - **In-App Update Engine:**
+              - Added "Check for Updates" directly inside Settings modal.
+              - Automated comparison with GitHub Releases API.
+              - Direct 1-tap download and update installation.
+            - **Performance & Security Hardening:**
+              - Hardware-accelerated video streaming engine.
+              - Strict URL scheme validation (`http`, `https`, `tg`) to protect against intent redirection.
+              - Sanitized input and filename handling for downloads.
+              - Android `DownloadManager` integration with background notifications.
+              - External player dispatch (VLC, MX Player) supported natively.
+          files: release-output/TeleCloud-v2.1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

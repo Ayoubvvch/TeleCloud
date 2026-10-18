@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                     enqueueDownload(url, name)
                 }
             } else {
-                Toast.makeText(this, "تتطلب عملية التحميل الإذن للمتابعة", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permission is required to proceed with downloads", Toast.LENGTH_SHORT).show()
             }
             pendingDownloadUrl = null
             pendingDownloadFilename = null
@@ -160,8 +160,14 @@ class MainActivity : AppCompatActivity() {
                     true
                 } else {
                     try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                        true
+                        val uri = Uri.parse(url)
+                        val scheme = uri.scheme?.lowercase()
+                        if (scheme == "http" || scheme == "https" || scheme == "tg") {
+                            startActivity(Intent(Intent.ACTION_VIEW, uri))
+                            true
+                        } else {
+                            false
+                        }
                     } catch (e: Exception) {
                         false
                     }
@@ -232,7 +238,7 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("TeleCloud")
                     .setMessage(message ?: "")
-                    .setPositiveButton("موافق") { _, _ -> result?.confirm() }
+                    .setPositiveButton("OK") { _, _ -> result?.confirm() }
                     .setOnCancelListener { result?.cancel() }
                     .show()
                 return true
@@ -242,8 +248,8 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("TeleCloud")
                     .setMessage(message ?: "")
-                    .setPositiveButton("تأكيد") { _, _ -> result?.confirm() }
-                    .setNegativeButton("إلغاء") { _, _ -> result?.cancel() }
+                    .setPositiveButton("Confirm") { _, _ -> result?.confirm() }
+                    .setNegativeButton("Cancel") { _, _ -> result?.cancel() }
                     .setOnCancelListener { result?.cancel() }
                     .show()
                 return true
@@ -263,7 +269,7 @@ class MainActivity : AppCompatActivity() {
                         finish()
                     } else {
                         lastBackPressTime = now
-                        Toast.makeText(this@MainActivity, "اضغط رجوع مرة أخرى للخروج من التطبيق", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Press back again to exit TeleCloud", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -322,25 +328,29 @@ class MainActivity : AppCompatActivity() {
             } catch (_: Exception) {}
 
             cleanName = cleanName.replace(Regex("[/\\\\?%*:|\"<>]"), "_")
-            if (!cleanName.endsWith(".mp4", ignoreCase = true) && !cleanName.contains(".")) {
+            val isApk = cleanName.endsWith(".apk", ignoreCase = true)
+            if (!isApk && !cleanName.endsWith(".mp4", ignoreCase = true) && !cleanName.contains(".")) {
                 cleanName += ".mp4"
             }
+
+            val mimeType = if (isApk) "application/vnd.android.package-archive" else "video/mp4"
+            val desc = if (isApk) "TeleCloud - App Update" else "TeleCloud - Downloading media"
 
             val uri = Uri.parse(url)
             val request = DownloadManager.Request(uri).apply {
                 setTitle(cleanName)
-                setDescription("TeleCloud - جاري التحميل")
+                setDescription(desc)
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName)
                 setAllowedOverMetered(true)
                 setAllowedOverRoaming(true)
-                setMimeType("video/mp4")
+                setMimeType(mimeType)
             }
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
-            Toast.makeText(this, "جاري بدء تحميل: $cleanName في التنزيلات", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Starting download: $cleanName in Downloads folder", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "تعذر بدء التحميل: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Failed to start download: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -351,9 +361,9 @@ class MainActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_TITLE, title)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            startActivity(Intent.createChooser(intent, "تشغيل بواسطة..."))
+            startActivity(Intent.createChooser(intent, "Play with..."))
         } catch (e: Exception) {
-            Toast.makeText(this, "لا يوجد مشغل فيديو مثبت على الجهاز", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No compatible video player found on device", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -417,6 +427,26 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isStoragePermissionGranted(): Boolean {
             return activity.hasStoragePermissions()
+        }
+
+        @JavascriptInterface
+        fun getAppVersion(): String {
+            return BuildConfig.VERSION_NAME
+        }
+
+        @JavascriptInterface
+        fun openBrowser(url: String) {
+            activity.runOnUiThread {
+                try {
+                    val uri = Uri.parse(url)
+                    val scheme = uri.scheme?.lowercase()
+                    if (scheme == "http" || scheme == "https") {
+                        activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    }
+                } catch (_: Exception) {
+                    Toast.makeText(activity, "Unable to open link", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

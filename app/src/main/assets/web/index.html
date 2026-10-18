@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TeleCloud - مشغل ومحمل سحابي فائق السرعة</title>
+  <title>TeleCloud - Ultra-Fast Cloud Streamer & Downloader</title>
   <style>
     :root {
       --bg-base: #080c14;
@@ -29,7 +29,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", "Tajawal", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -60,22 +60,22 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 800;
-      font-size: 17px;
-      color: #fff;
+      font-weight: 700;
+      font-size: 1.15rem;
       letter-spacing: -0.3px;
+      color: #fff;
     }
 
     .brand-icon {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, #0284c7, #0369a1);
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      font-size: 16px;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
     }
 
     .header-actions {
@@ -85,49 +85,49 @@
     }
 
     .server-pill {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 6px;
+      font-size: 0.75rem;
       padding: 4px 10px;
+      border-radius: 999px;
       background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 20px;
-      font-size: 11.5px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
       color: #34d399;
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .server-pill.offline {
       background: rgba(239, 68, 68, 0.12);
-      border-color: rgba(239, 68, 68, 0.3);
+      border-color: rgba(239, 68, 68, 0.25);
       color: #f87171;
     }
 
     .server-dot {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--emerald);
-    }
-    .server-pill.offline .server-dot {
-      background: var(--danger);
+      background: currentColor;
     }
 
     .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      color: var(--text-main);
-      width: 34px;
-      height: 34px;
-      border-radius: var(--radius-md);
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.15s ease;
     }
+
     .icon-btn:active {
-      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
     }
 
     /* Main Container */
@@ -136,24 +136,23 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      position: relative;
     }
 
-    /* Player Container */
+    /* Video Player Section */
     .player-section {
       background: #000;
       flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      border-bottom: 1px solid var(--border);
-      z-index: 5;
     }
 
     .video-wrapper {
       position: relative;
       width: 100%;
       background: #000;
-      max-height: 40vh;
+      aspect-ratio: 16 / 9;
+      max-height: 38vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -161,38 +160,41 @@
 
     video {
       width: 100%;
-      max-height: 40vh;
-      display: block;
-      outline: none;
+      height: 100%;
+      object-fit: contain;
       background: #000;
+      outline: none;
     }
 
     .player-placeholder {
-      padding: 30px 16px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 13.5px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 10px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      padding: 20px;
+      text-align: center;
     }
+
     .player-placeholder svg {
       opacity: 0.4;
     }
 
-    /* Player Info & Quick Controls Bar */
+    /* Quick Player Controls Bar */
     .player-bar {
       background: var(--bg-surface);
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      border-top: 1px solid var(--border);
     }
 
     .now-playing-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 10px;
     }
@@ -203,8 +205,8 @@
     }
 
     .now-playing-title {
-      font-size: 13.5px;
-      font-weight: 700;
+      font-size: 0.92rem;
+      font-weight: 600;
       color: #fff;
       white-space: nowrap;
       overflow: hidden;
@@ -214,174 +216,174 @@
     .now-playing-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       margin-top: 3px;
-      font-size: 11px;
-      color: var(--text-muted);
     }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
+      font-size: 0.7rem;
       padding: 2px 7px;
       border-radius: var(--radius-sm);
-      font-size: 10.5px;
-      font-weight: 600;
       background: rgba(255, 255, 255, 0.08);
       color: var(--text-muted);
+      font-weight: 500;
     }
+
     .badge.cyan {
-      background: rgba(2, 132, 199, 0.18);
-      color: var(--accent-light);
+      background: rgba(2, 132, 199, 0.15);
+      color: #38bdf8;
       border: 1px solid rgba(2, 132, 199, 0.3);
     }
 
-    /* Player Action Buttons Strip */
     .player-controls {
       display: flex;
       align-items: center;
       gap: 6px;
       overflow-x: auto;
-      padding-bottom: 2px;
       scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
     }
+
     .player-controls::-webkit-scrollbar {
       display: none;
     }
 
     .ctrl-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-main);
       padding: 6px 12px;
-      font-size: 11.5px;
-      font-weight: 600;
-      display: inline-flex;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      white-space: nowrap;
+      gap: 5px;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .ctrl-btn:active {
-      background: var(--bg-card-hover);
-    }
-    .ctrl-btn.active {
-      background: rgba(2, 132, 199, 0.25);
-      border-color: var(--accent-light);
-      color: var(--accent-light);
-    }
-    .ctrl-btn.emerald {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.35);
-      color: #34d399;
-    }
-    .ctrl-btn.emerald:active {
-      background: rgba(16, 185, 129, 0.3);
+      white-space: nowrap;
+      transition: all 0.15s ease;
     }
 
-    /* Explorer / Playlist Section */
+    .ctrl-btn:active {
+      transform: scale(0.94);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .ctrl-btn.active {
+      background: var(--bg-active);
+      border-color: var(--border-focus);
+      color: #38bdf8;
+    }
+
+    .ctrl-btn.emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    /* Content & Playlist Section */
     .content-section {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background: var(--bg-base);
     }
 
-    /* Filter & Search Bar */
     .filter-bar {
-      background: var(--bg-base);
-      padding: 10px 14px 6px 14px;
+      padding: 10px 14px 6px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       flex-shrink: 0;
+      background: var(--bg-base);
     }
 
     .search-box {
       position: relative;
       display: flex;
       align-items: center;
-      width: 100%;
-    }
-
-    .search-input {
-      width: 100%;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 8px 36px 8px 32px;
-      color: #fff;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .search-input:focus {
-      border-color: var(--border-focus);
-    }
-    .search-input::placeholder {
-      color: var(--text-dim);
     }
 
     .search-icon-svg {
       position: absolute;
-      right: 12px;
+      left: 12px;
       color: var(--text-dim);
       pointer-events: none;
     }
 
+    .search-input {
+      width: 100%;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0 34px 0 36px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+    }
+
     .search-clear-btn {
       position: absolute;
-      left: 10px;
-      background: none;
+      right: 10px;
+      background: transparent;
       border: none;
       color: var(--text-dim);
       font-size: 14px;
       cursor: pointer;
+      padding: 4px;
       display: none;
-      padding: 2px 6px;
     }
 
-    /* Folder Chips */
     .chips-wrapper {
       display: flex;
       align-items: center;
       gap: 6px;
       overflow-x: auto;
-      padding: 2px 0 6px 0;
       scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 2px 0;
     }
+
     .chips-wrapper::-webkit-scrollbar {
       display: none;
     }
 
     .chip {
+      padding: 5px 12px;
+      border-radius: 999px;
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
       color: var(--text-muted);
-      padding: 4px 12px;
-      font-size: 11.5px;
+      font-size: 0.75rem;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
+      transition: all 0.15s;
     }
+
     .chip.active {
       background: var(--accent);
       border-color: var(--accent-light);
       color: #fff;
-      font-weight: 700;
     }
 
-    /* Video List */
     .items-container {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 14px 24px 14px;
+      padding: 6px 14px 20px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .video-card {
@@ -392,43 +394,41 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
-      transition: background 0.12s, border-color 0.12s;
+      transition: all 0.15s ease;
     }
+
     .video-card:active {
       background: var(--bg-card-hover);
+      transform: scale(0.99);
     }
+
     .video-card.playing {
       background: var(--bg-active);
-      border-color: var(--accent-light);
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+      border-color: var(--border-focus);
     }
 
     .card-info {
       flex: 1;
       min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
     }
 
     .card-title {
-      font-size: 13px;
+      font-size: 0.88rem;
       font-weight: 600;
-      color: #fff;
+      color: #f1f5f9;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      direction: ltr;
-      text-align: right;
     }
 
     .card-meta {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 11px;
+      margin-top: 4px;
+      font-size: 0.72rem;
       color: var(--text-dim);
     }
 
@@ -440,149 +440,278 @@
     }
 
     .card-btn {
-      border: none;
+      height: 32px;
+      padding: 0 10px;
       border-radius: var(--radius-sm);
-      padding: 7px 11px;
-      font-size: 11.5px;
-      font-weight: 600;
-      display: inline-flex;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 4px;
       cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .card-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
     }
 
     .card-btn.play {
-      background: rgba(2, 132, 199, 0.18);
-      color: var(--accent-light);
-      border: 1px solid rgba(2, 132, 199, 0.35);
-    }
-    .card-btn.play:active {
-      background: var(--accent);
-      color: #fff;
+      background: rgba(2, 132, 199, 0.12);
+      border-color: rgba(2, 132, 199, 0.3);
+      color: #38bdf8;
     }
 
     .card-btn.download {
-      background: rgba(16, 185, 129, 0.12);
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.25);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.28);
-    }
-    .card-btn.download:active {
-      background: var(--emerald);
-      color: #fff;
+      width: 32px;
+      padding: 0;
     }
 
-    /* Empty / Status State */
     .empty-state {
-      padding: 50px 20px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 13px;
+      padding: 40px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 12px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* Modal Sheet */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .modal-input {
+      width: 100%;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0 12px;
+      color: #fff;
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    .modal-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent-light);
+      color: #fff;
+    }
+
+    /* Update Section in Settings */
+    .modal-section {
+      margin-top: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-version-pill {
+      font-size: 0.72rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .update-status {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .update-status.available {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .update-status.latest {
+      color: #34d399;
+    }
+
+    .update-status.error {
+      color: #f87171;
+    }
+
+    .update-notes {
+      max-height: 110px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      border: 1px solid var(--border);
+    }
+
+    .update-download-btn {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--emerald);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .update-download-btn:active {
+      transform: scale(0.97);
     }
 
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid var(--border);
       color: #fff;
       padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12.5px;
+      border-radius: 999px;
+      font-size: 0.82rem;
       font-weight: 500;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-      z-index: 99;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
       pointer-events: none;
       transition: opacity 0.2s;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 100;
-    }
-    .modal-backdrop.open {
-      display: flex;
-    }
-    .modal-content {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      width: 100%;
-      max-width: 380px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .modal-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #fff;
-    }
-    .modal-input {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 9px 12px;
-      color: #fff;
-      font-size: 13px;
-      outline: none;
-      direction: ltr;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-    .btn {
-      padding: 7px 14px;
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: #fff;
-    }
-    .btn.primary {
-      background: var(--accent);
-      border-color: var(--accent-light);
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Top App Header -->
   <header>
     <div class="brand">
       <div class="brand-icon">⚡</div>
       <span>TeleCloud</span>
     </div>
     <div class="header-actions">
-      <div class="server-pill" id="serverPill" title="حالة الاتصال">
+      <div class="server-pill" id="serverPill" title="Connection Status">
         <span class="server-dot"></span>
-        <span id="serverStatusText">جاري الاتصال...</span>
+        <span id="serverStatusText">Connecting...</span>
       </div>
-      <button class="icon-btn" id="refreshBtn" title="تحديث القائمة">
+      <button class="icon-btn" id="refreshBtn" title="Refresh Media List">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10"></polyline>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
         </svg>
       </button>
-      <button class="icon-btn" id="settingsBtn" title="إعدادات السيرفر">
+      <button class="icon-btn" id="settingsBtn" title="Settings & Updates">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -601,7 +730,7 @@
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          <span>اختر مقطعاً للبدء بالمشاهدة المباشرة فائقة السرعة</span>
+          <span>Select any cloud video below to start streaming</span>
         </div>
       </div>
 
@@ -609,29 +738,29 @@
       <div class="player-bar" id="playerBar" style="display:none;">
         <div class="now-playing-row">
           <div class="now-playing-info">
-            <div class="now-playing-title" id="nowPlayingTitle">العنوان</div>
+            <div class="now-playing-title" id="nowPlayingTitle">Title</div>
             <div class="now-playing-meta">
-              <span class="badge cyan" id="nowPlayingFolder">المجلد</span>
+              <span class="badge cyan" id="nowPlayingFolder">Main</span>
               <span class="badge" id="nowPlayingSize">0 MB</span>
             </div>
           </div>
         </div>
 
         <div class="player-controls">
-          <button class="ctrl-btn active" id="loopBtn" title="تكرار المقطع">
-            🔁 <span id="loopText">تكرار المقطع</span>
+          <button class="ctrl-btn active" id="loopBtn" title="Toggle Loop Mode">
+            🔁 <span id="loopText">Loop Single</span>
           </button>
-          <button class="ctrl-btn" id="speedBtn" title="سرعة التشغيل">
+          <button class="ctrl-btn" id="speedBtn" title="Playback Speed">
             ⚡ <span id="speedText">1.0x</span>
           </button>
-          <button class="ctrl-btn emerald" id="downloadCurrentBtn" title="تحميل هذا المقطع">
-            ⬇️ تحميل
+          <button class="ctrl-btn emerald" id="downloadCurrentBtn" title="Download this video">
+            ⬇️ Download
           </button>
-          <button class="ctrl-btn" id="externalPlayerBtn" title="تشغيل في مشغل خارجي (VLC / MX)">
-            🚀 مشغل خارجي
+          <button class="ctrl-btn" id="externalPlayerBtn" title="Play with VLC / MX Player">
+            🚀 External Player
           </button>
-          <button class="ctrl-btn" id="nextVideoBtn" title="المقطع التالي">
-            ⏭️ التالي
+          <button class="ctrl-btn" id="nextVideoBtn" title="Next Video">
+            ⏭️ Next
           </button>
         </div>
       </div>
@@ -639,40 +768,55 @@
 
     <!-- Content / Playlist Section -->
     <section class="content-section">
-      <!-- Search & Filters -->
+      <!-- Search & Category Filters -->
       <div class="filter-bar">
         <div class="search-box">
           <svg class="search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" class="search-input" id="searchInput" placeholder="بحث سريع عن المقاطع أو المجلدات...">
+          <input type="text" class="search-input" id="searchInput" placeholder="Search videos or folders...">
           <button class="search-clear-btn" id="searchClearBtn">✕</button>
         </div>
 
         <div class="chips-wrapper" id="folderChips">
-          <div class="chip active" data-folder="__all__">الكل (0)</div>
+          <div class="chip active" data-folder="__all__">All (0)</div>
         </div>
       </div>
 
       <!-- Video Feed List -->
       <div class="items-container" id="itemsContainer">
         <div class="empty-state">
-          <span>جاري تحميل المقاطع...</span>
+          <span>Loading cloud media...</span>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Server Settings Modal -->
+  <!-- Settings & App Updates Modal -->
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-content">
-      <div class="modal-title">⚙️ عنوان سيرفر السحابة (Host)</div>
+      <div class="modal-title">⚙️ Server Settings</div>
+      <div class="modal-label">Cloud Server Host (Direct or Proxy)</div>
       <input type="text" class="modal-input" id="serverHostInput" placeholder="http://51.170.138.59:8080">
+      
       <div class="modal-actions">
-        <button class="btn" id="resetServerBtn">الافتراضي</button>
-        <button class="btn" id="closeServerBtn">إلغاء</button>
-        <button class="btn primary" id="saveServerBtn">حفظ وتحديث</button>
+        <button class="btn" id="resetServerBtn">Default</button>
+        <button class="btn" id="closeServerBtn">Cancel</button>
+        <button class="btn primary" id="saveServerBtn">Save & Connect</button>
+      </div>
+
+      <!-- App Updates Section -->
+      <div class="modal-section">
+        <div class="modal-subtitle">
+          <span>🚀 App Updates</span>
+          <span class="app-version-pill" id="appVersionPill">v2.1.0</span>
+        </div>
+        <p class="update-status" id="updateStatus">Check GitHub for the latest release and in-place updates.</p>
+        <div id="updateActionContainer" style="display:none;"></div>
+        <button class="btn" id="checkUpdateBtn" style="width:100%;margin-top:6px;">
+          🔍 Check for Updates
+        </button>
       </div>
     </div>
   </div>
@@ -680,9 +824,10 @@
   <div class="toast" id="toast" style="display:none;"></div>
 
   <script>
-    // --- Server Configuration ---
+    // --- Configuration ---
     const DEFAULT_DIRECT_SERVER = 'http://51.170.138.59:8080';
     const FALLBACK_PROXY_SERVER = 'https://ayoub314.vercel.app';
+    const GITHUB_REPO = 'Ayoubvvch/TeleCloud';
 
     function getSavedServer() {
       return localStorage.getItem('tc_server') || DEFAULT_DIRECT_SERVER;
@@ -696,6 +841,14 @@
     let currentSpeedIndex = 1;
     const playbackSpeeds = [0.75, 1.0, 1.25, 1.5, 2.0];
     let selectedFolder = '__all__';
+
+    // Current App Version
+    let installedAppVersion = '2.1.0';
+    if (window.AndroidBridge && window.AndroidBridge.getAppVersion) {
+      try {
+        installedAppVersion = window.AndroidBridge.getAppVersion() || '2.1.0';
+      } catch (_) {}
+    }
 
     // DOM Elements
     const player = document.getElementById('mainPlayer');
@@ -724,9 +877,16 @@
     const resetServerBtn = document.getElementById('resetServerBtn');
     const closeServerBtn = document.getElementById('closeServerBtn');
     const saveServerBtn = document.getElementById('saveServerBtn');
+    const appVersionPill = document.getElementById('appVersionPill');
+    const updateStatus = document.getElementById('updateStatus');
+    const updateActionContainer = document.getElementById('updateActionContainer');
+    const checkUpdateBtn = document.getElementById('checkUpdateBtn');
     const toast = document.getElementById('toast');
 
-    // Utility: Format File Size
+    // Display installed version
+    appVersionPill.textContent = 'v' + installedAppVersion.replace(/^v/, '');
+
+    // Format File Size
     function formatBytes(bytes) {
       if (!bytes || bytes === 0) return '0 MB';
       const mb = bytes / (1024 * 1024);
@@ -736,7 +896,7 @@
       return mb.toFixed(1) + ' MB';
     }
 
-    // Utility: Toast notification
+    // Toast notification
     let toastTimeout = null;
     function showToast(message) {
       if (window.AndroidBridge && window.AndroidBridge.showToast) {
@@ -753,7 +913,7 @@
       }, 2500);
     }
 
-    // Build Stream & Download URLs
+    // Build Stream & Download URLs safely
     function getStreamUrl(item) {
       return `${activeServer}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}`;
     }
@@ -774,7 +934,7 @@
       playerBar.style.display = 'flex';
 
       nowPlayingTitle.textContent = item.name.replace(/\.[^/.]+$/, "");
-      nowPlayingFolder.textContent = item.folder_name || 'الرئيسية';
+      nowPlayingFolder.textContent = item.folder_name || 'Main';
       nowPlayingSize.textContent = formatBytes(item.size);
 
       // Stream source
@@ -831,14 +991,14 @@
       console.warn('Player stream error encountered on server:', activeServer);
       // Auto fallback if direct server fails
       if (activeServer !== FALLBACK_PROXY_SERVER) {
-        showToast('جاري التحويل التلقائي لخادم بديل...');
+        showToast('Switching to backup cloud server...');
         activeServer = FALLBACK_PROXY_SERVER;
-        serverStatusText.textContent = 'خادم بديل';
+        serverStatusText.textContent = 'Backup';
         if (currentIndex !== -1 && filteredItems[currentIndex]) {
           playVideo(currentIndex);
         }
       } else {
-        showToast('تعذر تشغيل هذا المقطع');
+        showToast('Unable to stream this video');
       }
     });
 
@@ -862,12 +1022,12 @@
       player.loop = isLoopSingle;
       if (isLoopSingle) {
         loopBtn.classList.add('active');
-        loopText.textContent = 'تكرار المقطع';
-        showToast('تم تفعيل تكرار المقطع 🔁');
+        loopText.textContent = 'Loop Single';
+        showToast('Loop mode enabled 🔁');
       } else {
         loopBtn.classList.remove('active');
-        loopText.textContent = 'تشغيل متتالي';
-        showToast('تم تفعيل الانتقال التلقائي للتالي ⏭️');
+        loopText.textContent = 'Auto Next';
+        showToast('Auto-play next video enabled ⏭️');
       }
     });
 
@@ -876,7 +1036,7 @@
       const speed = playbackSpeeds[currentSpeedIndex];
       player.playbackRate = speed;
       speedText.textContent = speed + 'x';
-      showToast(`سرعة التشغيل: ${speed}x ⚡`);
+      showToast(`Playback speed: ${speed}x ⚡`);
     });
 
     nextVideoBtn.addEventListener('click', () => {
@@ -907,22 +1067,21 @@
         window.AndroidBridge.downloadFile(dlUrl, filename);
       } else {
         window.open(dlUrl, '_blank');
-        showToast('جاري بدء التحميل...');
+        showToast('Download started...');
       }
     }
 
     // Load Items from API
     async function fetchMedia() {
       serverPill.className = 'server-pill';
-      serverStatusText.textContent = 'جاري الاتصال...';
-      itemsContainer.innerHTML = '<div class="empty-state">جاري تحميل المقاطع...</div>';
+      serverStatusText.textContent = 'Connecting...';
+      itemsContainer.innerHTML = '<div class="empty-state">Loading cloud media...</div>';
 
       try {
         let res = null;
         try {
           res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`);
         } catch (e) {
-          // If activeServer fails, try fallback proxy
           if (activeServer !== FALLBACK_PROXY_SERVER) {
             console.warn('Direct server unreachable, trying fallback proxy...');
             activeServer = FALLBACK_PROXY_SERVER;
@@ -956,34 +1115,34 @@
 
           allMediaItems = list;
           serverPill.className = 'server-pill';
-          serverStatusText.textContent = 'متصل';
+          serverStatusText.textContent = 'Connected';
           buildFolderChips();
           applyFilter();
         } else {
-          throw new Error('قائمة فارغة');
+          throw new Error('Empty media list');
         }
       } catch (err) {
         console.error('Fetch error:', err);
         serverPill.className = 'server-pill offline';
-        serverStatusText.textContent = 'غير متصل';
+        serverStatusText.textContent = 'Offline';
         itemsContainer.innerHTML = `
           <div class="empty-state">
-            <span>تعذر الاتصال بالسيرفر.</span>
-            <button class="btn primary" onclick="fetchMedia()">إعادة المحاولة</button>
+            <span>Unable to connect to cloud server.</span>
+            <button class="btn primary" onclick="fetchMedia()">Retry Connection</button>
           </div>
         `;
       }
     }
 
-    // Build Folder Chips
+    // Build Folder Filter Chips
     function buildFolderChips() {
       const counts = {};
       allMediaItems.forEach(it => {
-        const folder = it.folder_name || 'الرئيسية';
+        const folder = it.folder_name || 'Main';
         counts[folder] = (counts[folder] || 0) + 1;
       });
 
-      let html = `<div class="chip ${selectedFolder === '__all__' ? 'active' : ''}" data-folder="__all__">الكل (${allMediaItems.length})</div>`;
+      let html = `<div class="chip ${selectedFolder === '__all__' ? 'active' : ''}" data-folder="__all__">All (${allMediaItems.length})</div>`;
       Object.keys(counts).forEach(f => {
         html += `<div class="chip ${selectedFolder === f ? 'active' : ''}" data-folder="${escapeHtml(f)}">${escapeHtml(f)} (${counts[f]})</div>`;
       });
@@ -1004,7 +1163,7 @@
       const query = (searchInput.value || '').trim().toLowerCase();
 
       filteredItems = allMediaItems.filter(item => {
-        const matchFolder = (selectedFolder === '__all__') || ((item.folder_name || 'الرئيسية') === selectedFolder);
+        const matchFolder = (selectedFolder === '__all__') || ((item.folder_name || 'Main') === selectedFolder);
         if (!matchFolder) return false;
 
         if (!query) return true;
@@ -1020,7 +1179,7 @@
     // Render Video Card List
     function renderList() {
       if (filteredItems.length === 0) {
-        itemsContainer.innerHTML = '<div class="empty-state">لا توجد مقاطع مطابقة.</div>';
+        itemsContainer.innerHTML = '<div class="empty-state">No matching videos found.</div>';
         return;
       }
 
@@ -1030,7 +1189,7 @@
       filteredItems.forEach((item, index) => {
         const isPlaying = currentItem && currentItem.path === item.path;
         const cleanTitle = escapeHtml(item.name.replace(/\.[^/.]+$/, ""));
-        const folderName = escapeHtml(item.folder_name || 'الرئيسية');
+        const folderName = escapeHtml(item.folder_name || 'Main');
         const sizeStr = formatBytes(item.size);
 
         html += `
@@ -1043,10 +1202,10 @@
               </div>
             </div>
             <div class="card-actions">
-              <button class="card-btn play" title="تشغيل" data-play-index="${index}">
-                ▶ تشغيل
+              <button class="card-btn play" title="Play Video" data-play-index="${index}">
+                ▶ Play
               </button>
-              <button class="card-btn download" title="تحميل" data-dl-index="${index}">
+              <button class="card-btn download" title="Download" data-dl-index="${index}">
                 ⬇
               </button>
             </div>
@@ -1102,16 +1261,97 @@
     });
 
     saveServerBtn.addEventListener('click', () => {
-      const val = serverHostInput.value.trim().replace(/\/+$/, '');
+      let val = serverHostInput.value.trim().replace(/\/+$/, '');
       if (val) {
+        if (!val.startsWith('http://') && !val.startsWith('https://')) {
+          val = 'http://' + val;
+        }
         activeServer = val;
         localStorage.setItem('tc_server', activeServer);
         settingsModal.classList.remove('open');
-        showToast('تم حفظ عنوان السيرفر');
+        showToast('Server URL saved successfully');
         fetchMedia();
       }
     });
 
+    // Close modal on backdrop click
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.remove('open');
+      }
+    });
+
+    // --- Check for App Updates ---
+    function compareVersions(v1, v2) {
+      const p1 = (v1 || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+      const p2 = (v2 || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+      for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+        const a = p1[i] || 0;
+        const b = p2[i] || 0;
+        if (a > b) return 1;
+        if (a < b) return -1;
+      }
+      return 0;
+    }
+
+    async function checkForAppUpdates() {
+      updateStatus.className = 'update-status';
+      updateStatus.textContent = 'Checking GitHub for updates...';
+      checkUpdateBtn.disabled = true;
+      updateActionContainer.style.display = 'none';
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const latestTag = data.tag_name || '';
+        const currentTag = installedAppVersion;
+
+        const isNewer = compareVersions(latestTag, currentTag) > 0;
+        if (isNewer) {
+          updateStatus.className = 'update-status available';
+          updateStatus.innerHTML = `🎉 <strong>New Update Available: ${escapeHtml(latestTag)}</strong>`;
+
+          let apkAsset = (data.assets || []).find(a => a.name.endsWith('.apk'));
+          let downloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
+          let apkName = apkAsset ? apkAsset.name : `TeleCloud-${latestTag}.apk`;
+
+          updateActionContainer.innerHTML = `
+            <div class="update-notes">${escapeHtml(data.body || 'New features and improvements')}</div>
+            <button class="update-download-btn" id="downloadUpdateBtn">
+              ⬇️ Download & Install Update (${escapeHtml(latestTag)})
+            </button>
+          `;
+          updateActionContainer.style.display = 'block';
+
+          document.getElementById('downloadUpdateBtn').addEventListener('click', () => {
+            if (window.AndroidBridge && window.AndroidBridge.downloadFile) {
+              showToast('Starting update download...');
+              window.AndroidBridge.downloadFile(downloadUrl, apkName);
+            } else if (window.AndroidBridge && window.AndroidBridge.openBrowser) {
+              window.AndroidBridge.openBrowser(downloadUrl);
+            } else {
+              window.open(downloadUrl, '_blank');
+            }
+          });
+        } else {
+          updateStatus.className = 'update-status latest';
+          updateStatus.textContent = `✅ TeleCloud is up to date (v${currentTag.replace(/^v/, '')})`;
+        }
+      } catch (err) {
+        console.error('Update check error:', err);
+        updateStatus.className = 'update-status error';
+        updateStatus.textContent = '⚠️ Could not reach update server. Check your internet connection.';
+      } finally {
+        checkUpdateBtn.disabled = false;
+      }
+    }
+
+    checkUpdateBtn.addEventListener('click', checkForAppUpdates);
+
+    // HTML escape helper for security
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/[&<>"']/g, m => ({
