@@ -495,8 +495,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -524,7 +524,7 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
     .modal-title {
@@ -533,7 +533,7 @@
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .modal-label {
@@ -552,10 +552,32 @@
       color: #fff;
       font-size: 0.88rem;
       outline: none;
+      transition: border-color 0.15s;
     }
 
     .modal-input:focus {
       border-color: var(--border-focus);
+    }
+
+    .input-with-eye {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-with-eye input {
+      padding-right: 40px;
+    }
+
+    .eye-toggle-btn {
+      position: absolute;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
     }
 
     .modal-actions {
@@ -590,6 +612,23 @@
       background: var(--accent);
       border-color: var(--accent-light);
       color: #fff;
+    }
+
+    .btn.danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .error-alert {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      display: none;
     }
 
     /* Update Section in Settings */
@@ -711,6 +750,12 @@
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
         </svg>
       </button>
+      <button class="icon-btn" id="loginHeaderBtn" title="Account / Login">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
       <button class="icon-btn" id="settingsBtn" title="Settings & Updates">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -793,6 +838,34 @@
     </section>
   </main>
 
+  <!-- Login Modal (Quantum Gateway) -->
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal-content">
+      <div class="modal-title">🔐 Quantum Gateway Login</div>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-top:-6px;">Sign in to unlock protected cloud media streaming.</p>
+
+      <div class="error-alert" id="loginErrorAlert"></div>
+
+      <div>
+        <div class="modal-label">Username</div>
+        <input type="text" class="modal-input" id="loginUsername" placeholder="e.g. eulerx0" autocomplete="username">
+      </div>
+
+      <div>
+        <div class="modal-label">Password</div>
+        <div class="input-with-eye">
+          <input type="password" class="modal-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          <button class="eye-toggle-btn" id="togglePasswordBtn" type="button">👁️</button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:6px;">
+        <button class="btn" id="closeLoginBtn" type="button">Cancel</button>
+        <button class="btn primary" id="submitLoginBtn" type="button" style="min-width:110px;">Sign In</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings & App Updates Modal -->
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-content">
@@ -806,11 +879,23 @@
         <button class="btn primary" id="saveServerBtn">Save & Connect</button>
       </div>
 
+      <!-- Account / Session Section -->
+      <div class="modal-section">
+        <div class="modal-subtitle">
+          <span>👤 Account & Gateway</span>
+          <span class="app-version-pill" id="accountStatusPill">Not Logged In</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn" id="switchAccountBtn" style="flex:1;">🔑 Sign In / Switch</button>
+          <button class="btn danger" id="logoutBtn" style="flex:1;display:none;">Logout</button>
+        </div>
+      </div>
+
       <!-- App Updates Section -->
       <div class="modal-section">
         <div class="modal-subtitle">
           <span>🚀 App Updates</span>
-          <span class="app-version-pill" id="appVersionPill">v2.1.0</span>
+          <span class="app-version-pill" id="appVersionPill">v2.2.0</span>
         </div>
         <p class="update-status" id="updateStatus">Check GitHub for the latest release and in-place updates.</p>
         <div id="updateActionContainer" style="display:none;"></div>
@@ -843,10 +928,10 @@
     let selectedFolder = '__all__';
 
     // Current App Version
-    let installedAppVersion = '2.1.0';
+    let installedAppVersion = '2.2.0';
     if (window.AndroidBridge && window.AndroidBridge.getAppVersion) {
       try {
-        installedAppVersion = window.AndroidBridge.getAppVersion() || '2.1.0';
+        installedAppVersion = window.AndroidBridge.getAppVersion() || '2.2.0';
       } catch (_) {}
     }
 
@@ -883,6 +968,19 @@
     const checkUpdateBtn = document.getElementById('checkUpdateBtn');
     const toast = document.getElementById('toast');
 
+    // Login Modal Elements
+    const loginModal = document.getElementById('loginModal');
+    const loginHeaderBtn = document.getElementById('loginHeaderBtn');
+    const loginUsernameInput = document.getElementById('loginUsername');
+    const loginPasswordInput = document.getElementById('loginPassword');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const submitLoginBtn = document.getElementById('submitLoginBtn');
+    const closeLoginBtn = document.getElementById('closeLoginBtn');
+    const loginErrorAlert = document.getElementById('loginErrorAlert');
+    const accountStatusPill = document.getElementById('accountStatusPill');
+    const switchAccountBtn = document.getElementById('switchAccountBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     // Display installed version
     appVersionPill.textContent = 'v' + installedAppVersion.replace(/^v/, '');
 
@@ -912,6 +1010,139 @@
         setTimeout(() => toast.style.display = 'none', 200);
       }, 2500);
     }
+
+    // --- Authentication Handling ---
+    function updateAccountUI() {
+      const savedUser = localStorage.getItem('tc_auth_user');
+      if (savedUser) {
+        accountStatusPill.textContent = savedUser;
+        accountStatusPill.style.color = '#34d399';
+        logoutBtn.style.display = 'block';
+        switchAccountBtn.textContent = '🔑 Switch Account';
+      } else {
+        accountStatusPill.textContent = 'Not Logged In';
+        accountStatusPill.style.color = '#94a3b8';
+        logoutBtn.style.display = 'none';
+        switchAccountBtn.textContent = '🔑 Sign In';
+      }
+    }
+
+    function openLoginModal() {
+      loginErrorAlert.style.display = 'none';
+      loginErrorAlert.textContent = '';
+      loginUsernameInput.value = localStorage.getItem('tc_auth_user') || 'eulerx0';
+      loginPasswordInput.value = localStorage.getItem('tc_auth_pass') || '';
+      loginModal.classList.add('open');
+    }
+
+    function closeLoginModal() {
+      loginModal.classList.remove('open');
+    }
+
+    async function performLogin(username, password, isSilent = false) {
+      if (!username || !password) {
+        if (!isSilent) {
+          loginErrorAlert.textContent = 'Please enter both username and password';
+          loginErrorAlert.style.display = 'block';
+        }
+        return false;
+      }
+
+      if (!isSilent) {
+        submitLoginBtn.disabled = true;
+        submitLoginBtn.textContent = 'Verifying...';
+        loginErrorAlert.style.display = 'none';
+      }
+
+      try {
+        const res = await fetch(`${activeServer}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+          localStorage.setItem('tc_auth_user', username);
+          localStorage.setItem('tc_auth_pass', password);
+          updateAccountUI();
+          closeLoginModal();
+
+          // Sync Cookie with AndroidBridge if available
+          if (window.AndroidBridge && window.AndroidBridge.getCookie) {
+            const cookieVal = window.AndroidBridge.getCookie(activeServer);
+            if (cookieVal && window.AndroidBridge.setCookie) {
+              window.AndroidBridge.setCookie(activeServer, cookieVal);
+            }
+          }
+
+          if (!isSilent) {
+            showToast('Access Granted! 🚀');
+          }
+          fetchMedia();
+          return true;
+        } else {
+          const errMsg = data.error || 'Invalid username or password';
+          if (!isSilent) {
+            loginErrorAlert.textContent = errMsg;
+            loginErrorAlert.style.display = 'block';
+          }
+          return false;
+        }
+      } catch (err) {
+        if (!isSilent) {
+          loginErrorAlert.textContent = 'Network error connecting to login gateway.';
+          loginErrorAlert.style.display = 'block';
+        }
+        return false;
+      } finally {
+        if (!isSilent) {
+          submitLoginBtn.disabled = false;
+          submitLoginBtn.textContent = 'Sign In';
+        }
+      }
+    }
+
+    // Toggle password visibility
+    togglePasswordBtn.addEventListener('click', () => {
+      if (loginPasswordInput.type === 'password') {
+        loginPasswordInput.type = 'text';
+        togglePasswordBtn.textContent = '🔒';
+      } else {
+        loginPasswordInput.type = 'password';
+        togglePasswordBtn.textContent = '👁️';
+      }
+    });
+
+    submitLoginBtn.addEventListener('click', () => {
+      performLogin(loginUsernameInput.value.trim(), loginPasswordInput.value);
+    });
+
+    closeLoginBtn.addEventListener('click', closeLoginModal);
+    loginHeaderBtn.addEventListener('click', openLoginModal);
+    switchAccountBtn.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+      openLoginModal();
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('tc_auth_user');
+      localStorage.removeItem('tc_auth_pass');
+      if (window.AndroidBridge && window.AndroidBridge.clearCookies) {
+        window.AndroidBridge.clearCookies();
+      }
+      updateAccountUI();
+      settingsModal.classList.remove('open');
+      showToast('Logged out');
+      itemsContainer.innerHTML = `
+        <div class="empty-state">
+          <span>You are logged out.</span>
+          <button class="btn primary" onclick="openLoginModal()">Sign In</button>
+        </div>
+      `;
+    });
 
     // Build Stream & Download URLs safely
     function getStreamUrl(item) {
@@ -998,7 +1229,7 @@
           playVideo(currentIndex);
         }
       } else {
-        showToast('Unable to stream this video');
+        showToast('Unable to stream this video. Check login session.');
       }
     });
 
@@ -1080,19 +1311,50 @@
       try {
         let res = null;
         try {
-          res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`);
+          res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`, {
+            credentials: 'include'
+          });
         } catch (e) {
           if (activeServer !== FALLBACK_PROXY_SERVER) {
             console.warn('Direct server unreachable, trying fallback proxy...');
             activeServer = FALLBACK_PROXY_SERVER;
-            res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`);
+            res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`, {
+              credentials: 'include'
+            });
           } else {
             throw e;
           }
         }
 
+        // Handle 401 Unauthorized / require_login
+        if (res.status === 401) {
+          // Check if saved credentials exist for auto-login
+          const savedUser = localStorage.getItem('tc_auth_user');
+          const savedPass = localStorage.getItem('tc_auth_pass');
+          if (savedUser && savedPass) {
+            console.log('Session expired, attempting silent auto-login...');
+            const loggedIn = await performLogin(savedUser, savedPass, true);
+            if (loggedIn) return; // performLogin calls fetchMedia on success
+          }
+          serverPill.className = 'server-pill offline';
+          serverStatusText.textContent = 'Auth Required';
+          itemsContainer.innerHTML = `
+            <div class="empty-state">
+              <span>Authentication required to view media.</span>
+              <button class="btn primary" onclick="openLoginModal()">Sign In Now</button>
+            </div>
+          `;
+          openLoginModal();
+          return;
+        }
+
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
+
+        if (data.require_login) {
+          openLoginModal();
+          return;
+        }
 
         if (data.success && Array.isArray(data.items)) {
           // Deduplicate items
@@ -1249,6 +1511,7 @@
     // Settings Modal Handlers
     settingsBtn.addEventListener('click', () => {
       serverHostInput.value = activeServer;
+      updateAccountUI();
       settingsModal.classList.add('open');
     });
 
@@ -1363,8 +1626,15 @@
       }[m]));
     }
 
-    // Initial Load
-    fetchMedia();
+    // Initial Load & Auth Check
+    updateAccountUI();
+    const storedUser = localStorage.getItem('tc_auth_user');
+    const storedPass = localStorage.getItem('tc_auth_pass');
+    if (storedUser && storedPass) {
+      performLogin(storedUser, storedPass, true);
+    } else {
+      fetchMedia();
+    }
   </script>
 </body>
 </html>

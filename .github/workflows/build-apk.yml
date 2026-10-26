@@ -33,23 +33,23 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-output
-          cp app/build/outputs/apk/release/app-release.apk release-output/TeleCloud-v2.1.0.apk
+          cp app/build/outputs/apk/release/app-release.apk release-output/TeleCloud-v2.2.0.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeleCloud-v2.1.0-APK
-          path: release-output/TeleCloud-v2.1.0.apk
+          name: TeleCloud-v2.2.0-APK
+          path: release-output/TeleCloud-v2.2.0.apk
           if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v2.1.0
-          name: "TeleCloud v2.1.0 - Full English, Signed APK & In-App Updates"
+          tag_name: v2.2.0
+          name: "TeleCloud v2.2.0 - Quantum Gateway Authentication & In-App Login"
           body: |
-            ### ⚡ TeleCloud v2.1.0: Signed In-Place Updates & Modern English UI
+            ### ⚡ TeleCloud v2.2.0: Quantum Gateway Authentication, Cookie Sync & In-App Login
 
             - **Persistent Cryptographic Signing:**
               - Officially signed with a permanent release keystore.
@@ -67,6 +67,6 @@ jobs:
               - Sanitized input and filename handling for downloads.
               - Android `DownloadManager` integration with background notifications.
               - External player dispatch (VLC, MX Player) supported natively.
-          files: release-output/TeleCloud-v2.1.0.apk
+          files: release-output/TeleCloud-v2.2.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

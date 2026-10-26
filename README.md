@@ -5,9 +5,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v2.1.0-0284c7?style=for-the-badge&logo=android" alt="Release v2.1.0">
+  <img src="https://img.shields.io/badge/Release-v2.2.0-0284c7?style=for-the-badge&logo=android" alt="Release v2.2.0">
   <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-10b981?style=for-the-badge&logo=android" alt="Platform">
   <img src="https://img.shields.io/badge/Architecture-Kotlin%20%2B%20WebViewAssetLoader-38bdf8?style=for-the-badge" alt="Architecture">
+  <img src="https://img.shields.io/badge/Auth-Quantum%20Gateway%20Protected-10b981?style=for-the-badge" alt="Auth">
   <img src="https://img.shields.io/badge/Signing-Persistent%20Release%20Keystore-8b5cf6?style=for-the-badge" alt="Signing">
 </p>
 
@@ -23,6 +24,11 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
 
 ## ✨ Features
 
+- **🔐 Quantum Gateway In-App Authentication:**
+  - Full support for protected cloud backends requiring username & password authentication.
+  - Seamless in-app Login modal with secure local credential persistence and silent auto-login.
+  - Native cookie synchronization across WebView, official `DownloadManager`, and external players.
+
 - **🚀 Ultra-Fast Cloud Video Streaming:**
   - Direct hardware-accelerated playback (`View.LAYER_TYPE_HARDWARE`).
   - Granular playback speed control: `0.75x`, `1.0x`, `1.25x`, `1.5x`, `2.0x`.
@@ -30,7 +36,7 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
   - Native display keep-awake (`FLAG_KEEP_SCREEN_ON`) automatically active during playback.
 
 - **📱 1-Tap External Player Support:**
-  - Launch high-bitrate or surround-audio streams directly in dedicated players such as **VLC**, **MX Player**, or **Nova Video Player** with a single tap.
+  - Launch high-bitrate or surround-audio streams directly in dedicated players such as **VLC**, **MX Player**, or **Nova Video Player** with session cookie header injection.
 
 - **💾 Native Android Background Downloads:**
   - Offloaded directly to Android’s official `DownloadManager`.
@@ -59,24 +65,27 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
                                ┌────────────────────────────────────────┐
                                │           AMOLED User Interface        │
                                │   (HTML5 / Vanilla JS / CSS3 - LTR)    │
+                               │   • Quantum Gateway Login Modal        │
                                └──────────────────┬─────────────────────┘
                                                   │ (WebViewAssetLoader)
                                                   ▼
                                ┌────────────────────────────────────────┐
                                │          Android Native Layer          │
                                │  com.acmods.telecloud.MainActivity     │
+                               │  • CookieManager / Session Sync        │
                                └───────┬────────────────────────┬───────┘
                                        │                        │
                    (DownloadManager)   ▼                        ▼   (Intent.ACTION_VIEW)
                 ┌───────────────────────────┐         ┌──────────────────────────┐
                 │  Official System Downloads│         │  External Video Players  │
                 │     (/sdcard/Download/)   │         │     (VLC / MX Player)    │
+                │     with Cookie Headers   │         │     with Cookie Headers  │
                 └───────────────────────────┘         └──────────────────────────┘
                                        ▲
-                                       │ (HTTP/HTTPS Streaming & Metadata)
+                                       │ (Authenticated Streaming & Metadata)
                 ┌──────────────────────┴─────────────────────────────────┐
                 │                  Cloud Backend Servers                 │
-                │     • Primary VPS Server                               │
+                │     • Quantum Gateway Protected VPS                    │
                 │     • Automatic Fallback Proxy Server                  │
                 └────────────────────────────────────────────────────────┘
 ```
@@ -86,7 +95,7 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
 ## 📥 Installation
 
 1. Navigate to the [Latest Releases](https://github.com/Ayoubvvch/TeleCloud/releases/latest) page.
-2. Download `TeleCloud-v2.1.0.apk`.
+2. Download `TeleCloud-v2.2.0.apk`.
 3. Open the APK on your Android device (Android 8.0 Oreo or newer) and confirm installation.
 4. Future updates can be checked and downloaded directly from the **Settings (⚙️) > Check for Updates** menu inside the app.
 
@@ -97,7 +106,7 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
 ### Prerequisites
 - **JDK 17** (Temurin or OpenJDK recommended)
 - **Android SDK** (API Level 34, Build Tools 34.0.0)
-- **Gradle 8.2+** (included via wrapper)
+- **Gradle 8.6+** (included via wrapper)
 
 ### Build Steps
 
@@ -113,21 +122,6 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
    ```
    *The signed APK will be generated at:*  
    `app/build/outputs/apk/release/app-release.apk`
-
----
-
-## 🔒 Security Best Practices & Backend Hardening
-
-If you are hosting your own Telegram Cloud Bot backend:
-
-1. **Protect Administrative Routes:**
-   Ensure endpoints such as `/api/config`, `/api/logs`, `/api/db/*`, and `/` are protected behind strong HTTP Basic Authentication or accessible only via private VPN / localhost.
-2. **Public Route Exposure:**
-   Only expose the following read-only streaming routes publicly:
-   - `GET /api/tg-cloud/category`
-   - `GET /api/tg-cloud/stream`
-3. **Use HTTPS / TLS:**
-   Place your VPS behind an SSL/TLS reverse proxy (e.g., Caddy, Nginx with Let's Encrypt, or Cloudflare) to encrypt all streaming and metadata traffic.
 
 ---
 

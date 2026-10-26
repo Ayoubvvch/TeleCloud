@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
+                databaseEnabled = true
                 allowFileAccess = true
                 allowContentAccess = true
                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -119,6 +120,12 @@ class MainActivity : AppCompatActivity() {
                 setSupportZoom(false)
                 displayZoomControls = false
             }
+        }
+
+        // Enable Cookies & Third-Party Cookies for authenticated streaming
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(webView, true)
         }
 
         rootContainer.addView(webView)
@@ -337,9 +344,14 @@ class MainActivity : AppCompatActivity() {
             val desc = if (isApk) "TeleCloud - App Update" else "TeleCloud - Downloading media"
 
             val uri = Uri.parse(url)
+            val cookie = try { CookieManager.getInstance().getCookie(url) } catch (_: Exception) { null }
             val request = DownloadManager.Request(uri).apply {
                 setTitle(cleanName)
                 setDescription(desc)
+                if (!cookie.isNullOrEmpty()) {
+                    addRequestHeader("Cookie", cookie)
+                }
+                addRequestHeader("User-Agent", "TeleCloudApp/2.2.0")
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName)
                 setAllowedOverMetered(true)
@@ -356,9 +368,18 @@ class MainActivity : AppCompatActivity() {
 
     fun openExternalPlayer(url: String, title: String) {
         try {
+            val cookie = try { CookieManager.getInstance().getCookie(url) } catch (_: Exception) { null }
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(Uri.parse(url), "video/*")
                 putExtra(Intent.EXTRA_TITLE, title)
+                if (!cookie.isNullOrEmpty()) {
+                    putExtra("headers", arrayOf("Cookie", cookie))
+                    val headersBundle = Bundle().apply {
+                        putString("Cookie", cookie)
+                        putString("User-Agent", "TeleCloudApp/2.2.0")
+                    }
+                    putExtra("android.media.intent.extra.HTTP_HEADERS", headersBundle)
+                }
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(Intent.createChooser(intent, "Play with..."))
@@ -446,6 +467,35 @@ class MainActivity : AppCompatActivity() {
                 } catch (_: Exception) {
                     Toast.makeText(activity, "Unable to open link", Toast.LENGTH_SHORT).show()
                 }
+            }
+        }
+
+        @JavascriptInterface
+        fun setCookie(url: String, cookieString: String) {
+            activity.runOnUiThread {
+                try {
+                    CookieManager.getInstance().setCookie(url, cookieString)
+                    CookieManager.getInstance().flush()
+                } catch (_: Exception) {}
+            }
+        }
+
+        @JavascriptInterface
+        fun getCookie(url: String): String {
+            return try {
+                CookieManager.getInstance().getCookie(url) ?: ""
+            } catch (_: Exception) {
+                ""
+            }
+        }
+
+        @JavascriptInterface
+        fun clearCookies() {
+            activity.runOnUiThread {
+                try {
+                    CookieManager.getInstance().removeAllCookies(null)
+                    CookieManager.getInstance().flush()
+                } catch (_: Exception) {}
             }
         }
     }
