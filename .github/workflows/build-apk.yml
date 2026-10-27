@@ -33,23 +33,23 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-output
-          cp app/build/outputs/apk/release/app-release.apk release-output/TeleCloud-v2.2.2.apk
+          cp app/build/outputs/apk/release/app-release.apk release-output/TeleCloud-v2.2.3.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TeleCloud-v2.2.2-APK
-          path: release-output/TeleCloud-v2.2.2.apk
+          name: TeleCloud-v2.2.3-APK
+          path: release-output/TeleCloud-v2.2.3.apk
           if-no-files-found: error
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v2.2.2
-          name: "TeleCloud v2.2.2 - Authenticated Video Streaming & Cookie Interceptor"
+          tag_name: v2.2.3
+          name: "TeleCloud v2.2.3 - High-Speed Localhost Stream Server & Seamless Playback"
           body: |
-            ### ⚡ TeleCloud v2.2.2: Native Stream Interceptor, Range Request Forwarding & Seamless Streaming
+            ### ⚡ TeleCloud v2.2.3: Built-In Localhost Stream Server, Automated Range Forwarding & 100% Reliable Playback
 
             - **Persistent Cryptographic Signing:**
               - Officially signed with a permanent release keystore.
@@ -67,6 +67,6 @@ jobs:
               - Sanitized input and filename handling for downloads.
               - Android `DownloadManager` integration with background notifications.
               - External player dispatch (VLC, MX Player) supported natively.
-          files: release-output/TeleCloud-v2.2.2.apk
+          files: release-output/TeleCloud-v2.2.3.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

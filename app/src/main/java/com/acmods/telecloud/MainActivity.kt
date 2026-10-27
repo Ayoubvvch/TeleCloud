@@ -28,11 +28,29 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
 import java.net.URL
 import java.net.URLDecoder
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
+    var localStreamServer: LocalStreamServer? = null
+
+    fun getSavedServerHost(): String {
+        val sp = getSharedPreferences("telecloud_settings", Context.MODE_PRIVATE)
+        return sp.getString("server_host", "http://51.170.138.59:8080") ?: "http://51.170.138.59:8080"
+    }
+
+    fun saveServerHost(host: String) {
+        val sp = getSharedPreferences("telecloud_settings", Context.MODE_PRIVATE)
+        sp.edit().putString("server_host", host).apply()
+    }
+
     fun getSavedAuthCookie(urlStr: String? = null): String? {
         val cmCookie = if (!urlStr.isNullOrEmpty()) {
             try { CookieManager.getInstance().getCookie(urlStr) } catch (_: Exception) { null }
@@ -97,6 +115,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        localStreamServer = LocalStreamServer(this).apply { start() }
 
         // AMOLED / Dark Space System Bars (#090D16)
         window.statusBarColor = Color.parseColor("#090D16")
@@ -168,64 +187,7 @@ class MainActivity : AppCompatActivity() {
                 view: WebView,
                 request: WebResourceRequest
             ): WebResourceResponse? {
-                val urlStr = request.url.toString()
-                if (urlStr.startsWith("https://appassets.androidplatform.net")) {
-                    return assetLoader.shouldInterceptRequest(request.url)
-                }
-
-                // Intercept cloud streaming to inject auth session cookie & support 206 Partial Content
-                if (urlStr.contains("/api/tg-cloud/stream")) {
-                    try {
-                        val url = URL(urlStr)
-                        val conn = (url.openConnection() as HttpURLConnection).apply {
-                            requestMethod = request.method
-                            connectTimeout = 15000
-                            readTimeout = 15000
-
-                            // Forward request headers (Range header for video seeking)
-                            for ((k, v) in request.requestHeaders) {
-                                setRequestProperty(k, v)
-                            }
-
-                            // Inject auth cookie from persistent storage or CookieManager
-                            val cookie = getSavedAuthCookie(urlStr)
-                            if (!cookie.isNullOrEmpty()) {
-                                setRequestProperty("Cookie", cookie)
-                            }
-                            setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
-                        }
-
-                        val statusCode = conn.responseCode
-                        val statusMessage = conn.responseMessage?.ifEmpty { "OK" } ?: "OK"
-                        val mimeType = conn.contentType?.substringBefore(";")?.trim() ?: "video/mp4"
-                        val encoding = conn.contentEncoding ?: "UTF-8"
-
-                        val responseHeaders = mutableMapOf<String, String>()
-                        for ((key, values) in conn.headerFields) {
-                            if (key != null && values.isNotEmpty()) {
-                                responseHeaders[key] = values.joinToString(", ")
-                            }
-                        }
-
-                        // Ensure Accept-Ranges and CORS headers
-                        responseHeaders["Access-Control-Allow-Origin"] = "*"
-                        responseHeaders["Accept-Ranges"] = "bytes"
-
-                        val stream = if (statusCode in 200..299) conn.inputStream else conn.errorStream
-                        return WebResourceResponse(
-                            mimeType,
-                            encoding,
-                            statusCode,
-                            statusMessage,
-                            responseHeaders,
-                            stream
-                        )
-                    } catch (e: Exception) {
-                        // Fallback to default handling
-                    }
-                }
-
-                return super.shouldInterceptRequest(view, request)
+                return assetLoader.shouldInterceptRequest(request.url)
             }
 
             override fun shouldOverrideUrlLoading(
@@ -473,12 +435,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        localStreamServer?.stop()
         customView?.let { webView.webChromeClient?.onHideCustomView() }
         webView.destroy()
         super.onDestroy()
     }
 
     class AndroidBridge(private val activity: MainActivity) {
+        @JavascriptInterface
+        fun setSavedServerHost(host: String) {
+            activity.runOnUiThread {
+                activity.saveServerHost(host)
+            }
+        }
+
+        @JavascriptInterface
+        fun getStreamUrl(rawUrl: String, path: String): String {
+            val port = activity.localStreamServer?.port ?: 0
+            return if (port > 0) {
+                "http://127.0.0.1:$port/stream?path=" + URLEncoder.encode(path, "UTF-8")
+            } else {
+                rawUrl
+            }
+        }
+
         @JavascriptInterface
         fun nativeLogin(serverUrl: String, jsonPayload: String): String {
             return try {
@@ -491,7 +471,7 @@ class MainActivity : AppCompatActivity() {
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.3")
                 }
 
                 conn.outputStream.use { os ->
@@ -530,7 +510,7 @@ class MainActivity : AppCompatActivity() {
                     connectTimeout = 12000
                     readTimeout = 12000
                     setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.3")
 
                     val cookie = activity.getSavedAuthCookie(targetUrl)
                     if (!cookie.isNullOrEmpty()) {
@@ -655,5 +635,103 @@ class MainActivity : AppCompatActivity() {
                 } catch (_: Exception) {}
             }
         }
+    }
+}
+
+class LocalStreamServer(private val activity: MainActivity) {
+    private var serverSocket: ServerSocket? = null
+    var port: Int = 0
+        private set
+    @Volatile
+    private var isRunning = false
+
+    fun start() {
+        if (isRunning) return
+        isRunning = true
+        Thread {
+            try {
+                serverSocket = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+                port = serverSocket!!.localPort
+                while (isRunning && serverSocket != null && !serverSocket!!.isClosed) {
+                    val client = serverSocket!!.accept()
+                    Thread { handleClient(client) }.start()
+                }
+            } catch (_: Exception) {}
+        }.start()
+    }
+
+    private fun handleClient(client: Socket) {
+        var conn: HttpURLConnection? = null
+        try {
+            client.soTimeout = 30000
+            val input = client.getInputStream()
+            val reader = BufferedReader(InputStreamReader(input, Charsets.UTF_8))
+            val requestLine = reader.readLine() ?: return
+            val parts = requestLine.split(" ")
+            if (parts.size < 2) return
+
+            var rangeHeader: String? = null
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                if (line.isNullOrEmpty()) break
+                if (line!!.startsWith("Range:", ignoreCase = true)) {
+                    rangeHeader = line!!.substring(6).trim()
+                }
+            }
+
+            val requestPath = parts[1]
+            val uri = Uri.parse("http://127.0.0.1$requestPath")
+            val mediaPath = uri.getQueryParameter("path") ?: return
+
+            val serverHost = activity.getSavedServerHost()
+            val targetUrl = "$serverHost/api/tg-cloud/stream?path=" + URLEncoder.encode(mediaPath, "UTF-8")
+
+            val url = URL(targetUrl)
+            conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 15000
+                readTimeout = 30000
+                if (!rangeHeader.isNullOrEmpty()) {
+                    setRequestProperty("Range", rangeHeader)
+                }
+                val cookie = activity.getSavedAuthCookie(targetUrl)
+                if (!cookie.isNullOrEmpty()) {
+                    setRequestProperty("Cookie", cookie)
+                }
+                setRequestProperty("User-Agent", "TeleCloudApp/2.2.3")
+            }
+
+            val responseCode = conn.responseCode
+            val statusLine = "HTTP/1.1 $responseCode ${conn.responseMessage}\r\n"
+            val clientOut = client.getOutputStream()
+            clientOut.write(statusLine.toByteArray(Charsets.UTF_8))
+
+            for ((key, values) in conn.headerFields) {
+                if (key != null && !key.equals("Transfer-Encoding", ignoreCase = true)) {
+                    for (v in values) {
+                        clientOut.write("$key: $v\r\n".toByteArray(Charsets.UTF_8))
+                    }
+                }
+            }
+            clientOut.write("Access-Control-Allow-Origin: *\r\n".toByteArray(Charsets.UTF_8))
+            clientOut.write("Accept-Ranges: bytes\r\n\r\n".toByteArray(Charsets.UTF_8))
+
+            val stream = if (responseCode in 200..299) conn.inputStream else conn.errorStream
+            val buffer = ByteArray(32768)
+            var bytesRead: Int
+            while (stream.read(buffer).also { bytesRead = it } != -1) {
+                clientOut.write(buffer, 0, bytesRead)
+                clientOut.flush()
+            }
+        } catch (_: Exception) {
+        } finally {
+            try { client.close() } catch (_: Exception) {}
+            try { conn?.disconnect() } catch (_: Exception) {}
+        }
+    }
+
+    fun stop() {
+        isRunning = false
+        try { serverSocket?.close() } catch (_: Exception) {}
     }
 }

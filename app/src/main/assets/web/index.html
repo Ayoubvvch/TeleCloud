@@ -895,7 +895,7 @@
       <div class="modal-section">
         <div class="modal-subtitle">
           <span>🚀 App Updates</span>
-          <span class="app-version-pill" id="appVersionPill">v2.2.2</span>
+          <span class="app-version-pill" id="appVersionPill">v2.2.3</span>
         </div>
         <p class="update-status" id="updateStatus">Check GitHub for the latest release and in-place updates.</p>
         <div id="updateActionContainer" style="display:none;"></div>
@@ -928,7 +928,7 @@
     let selectedFolder = '__all__';
 
     // Current App Version
-    let installedAppVersion = '2.2.2';
+    let installedAppVersion = '2.2.3';
     if (window.AndroidBridge && window.AndroidBridge.getAppVersion) {
       try {
         installedAppVersion = window.AndroidBridge.getAppVersion() || '2.2.0';
@@ -1149,7 +1149,11 @@
 
     // Build Stream & Download URLs safely
     function getStreamUrl(item) {
-      return `${activeServer}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}`;
+      const rawUrl = `${activeServer}/api/tg-cloud/stream?path=${encodeURIComponent(item.path)}`;
+      if (window.AndroidBridge && window.AndroidBridge.getStreamUrl) {
+        return window.AndroidBridge.getStreamUrl(rawUrl, item.path);
+      }
+      return rawUrl;
     }
 
     function getDownloadUrl(item) {
@@ -1516,7 +1520,7 @@
           val = 'http://' + val;
         }
         activeServer = val;
-        localStorage.setItem('tc_server', activeServer);
+        localStorage.setItem('tc_server', activeServer); if (window.AndroidBridge && window.AndroidBridge.setSavedServerHost) { window.AndroidBridge.setSavedServerHost(activeServer); }
         settingsModal.classList.remove('open');
         showToast('Server URL saved successfully');
         fetchMedia();
