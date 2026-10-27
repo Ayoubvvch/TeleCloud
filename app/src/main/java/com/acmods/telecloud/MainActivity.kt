@@ -509,7 +509,7 @@ class MainActivity : AppCompatActivity() {
                 if (!cookies.isNullOrEmpty()) {
                     for (c in cookies) {
                         CookieManager.getInstance().setCookie(cleanServer, c)
-                        saveAuthCookie(c)
+                        activity.saveAuthCookie(c)
                     }
                     CookieManager.getInstance().flush()
                 }
@@ -532,7 +532,7 @@ class MainActivity : AppCompatActivity() {
                     setRequestProperty("Accept", "application/json")
                     setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
 
-                    val cookie = CookieManager.getInstance().getCookie(targetUrl)
+                    val cookie = activity.getSavedAuthCookie(targetUrl)
                     if (!cookie.isNullOrEmpty()) {
                         setRequestProperty("Cookie", cookie)
                     }
