@@ -895,7 +895,7 @@
       <div class="modal-section">
         <div class="modal-subtitle">
           <span>🚀 App Updates</span>
-          <span class="app-version-pill" id="appVersionPill">v2.2.0</span>
+          <span class="app-version-pill" id="appVersionPill">v2.2.1</span>
         </div>
         <p class="update-status" id="updateStatus">Check GitHub for the latest release and in-place updates.</p>
         <div id="updateActionContainer" style="display:none;"></div>
@@ -928,7 +928,7 @@
     let selectedFolder = '__all__';
 
     // Current App Version
-    let installedAppVersion = '2.2.0';
+    let installedAppVersion = '2.2.1';
     if (window.AndroidBridge && window.AndroidBridge.getAppVersion) {
       try {
         installedAppVersion = window.AndroidBridge.getAppVersion() || '2.2.0';
@@ -1055,28 +1055,30 @@
       }
 
       try {
-        const res = await fetch(`${activeServer}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username, password })
-        });
+        let data = null;
+        if (window.AndroidBridge && window.AndroidBridge.nativeLogin) {
+          // Native call bypassing browser CORS & mixed-content restrictions
+          const resRaw = window.AndroidBridge.nativeLogin(activeServer, JSON.stringify({ username, password }));
+          try {
+            data = JSON.parse(resRaw);
+          } catch (_) {
+            data = { success: false, error: resRaw };
+          }
+        } else {
+          // Fallback for standard browsers
+          const res = await fetch(`${activeServer}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          data = await res.json().catch(() => ({}));
+        }
 
-        const data = await res.json().catch(() => ({}));
-
-        if (res.ok && data.success) {
+        if (data && data.success) {
           localStorage.setItem('tc_auth_user', username);
           localStorage.setItem('tc_auth_pass', password);
           updateAccountUI();
           closeLoginModal();
-
-          // Sync Cookie with AndroidBridge if available
-          if (window.AndroidBridge && window.AndroidBridge.getCookie) {
-            const cookieVal = window.AndroidBridge.getCookie(activeServer);
-            if (cookieVal && window.AndroidBridge.setCookie) {
-              window.AndroidBridge.setCookie(activeServer, cookieVal);
-            }
-          }
 
           if (!isSilent) {
             showToast('Access Granted! 🚀');
@@ -1084,7 +1086,7 @@
           fetchMedia();
           return true;
         } else {
-          const errMsg = data.error || 'Invalid username or password';
+          const errMsg = (data && data.error) ? data.error : 'Invalid username or password';
           if (!isSilent) {
             loginErrorAlert.textContent = errMsg;
             loginErrorAlert.style.display = 'block';
@@ -1092,8 +1094,9 @@
           return false;
         }
       } catch (err) {
+        console.error('Login error:', err);
         if (!isSilent) {
-          loginErrorAlert.textContent = 'Network error connecting to login gateway.';
+          loginErrorAlert.textContent = 'Connection error: ' + (err.message || 'Gateway unreachable');
           loginErrorAlert.style.display = 'block';
         }
         return false;
@@ -1309,32 +1312,33 @@
       itemsContainer.innerHTML = '<div class="empty-state">Loading cloud media...</div>';
 
       try {
-        let res = null;
-        try {
-          res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`, {
-            credentials: 'include'
-          });
-        } catch (e) {
-          if (activeServer !== FALLBACK_PROXY_SERVER) {
-            console.warn('Direct server unreachable, trying fallback proxy...');
-            activeServer = FALLBACK_PROXY_SERVER;
-            res = await fetch(`${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`, {
-              credentials: 'include'
-            });
+        let data = null;
+        const targetUrl = `${activeServer}/api/tg-cloud/category?type=video&_t=${Date.now()}`;
+
+        if (window.AndroidBridge && window.AndroidBridge.nativeFetch) {
+          const resRaw = window.AndroidBridge.nativeFetch(targetUrl);
+          try {
+            data = JSON.parse(resRaw);
+          } catch (_) {
+            data = { success: false, error: resRaw };
+          }
+        } else {
+          const res = await fetch(targetUrl);
+          if (res.status === 401) {
+            data = { success: false, require_login: true, status: 401 };
           } else {
-            throw e;
+            data = await res.json().catch(() => ({}));
           }
         }
 
         // Handle 401 Unauthorized / require_login
-        if (res.status === 401) {
-          // Check if saved credentials exist for auto-login
+        if (data && (data.require_login || data.status === 401)) {
           const savedUser = localStorage.getItem('tc_auth_user');
           const savedPass = localStorage.getItem('tc_auth_pass');
           if (savedUser && savedPass) {
             console.log('Session expired, attempting silent auto-login...');
             const loggedIn = await performLogin(savedUser, savedPass, true);
-            if (loggedIn) return; // performLogin calls fetchMedia on success
+            if (loggedIn) return;
           }
           serverPill.className = 'server-pill offline';
           serverStatusText.textContent = 'Auth Required';
@@ -1348,15 +1352,7 @@
           return;
         }
 
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-
-        if (data.require_login) {
-          openLoginModal();
-          return;
-        }
-
-        if (data.success && Array.isArray(data.items)) {
+        if (data && data.success && Array.isArray(data.items)) {
           // Deduplicate items
           const seen = new Set();
           const list = [];
@@ -1381,7 +1377,7 @@
           buildFolderChips();
           applyFilter();
         } else {
-          throw new Error('Empty media list');
+          throw new Error((data && data.error) || 'Empty media list');
         }
       } catch (err) {
         console.error('Fetch error:', err);

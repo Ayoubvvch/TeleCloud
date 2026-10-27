@@ -28,6 +28,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import java.net.HttpURLConnection
+import java.net.URL
 import java.net.URLDecoder
 
 class MainActivity : AppCompatActivity() {
@@ -405,6 +407,88 @@ class MainActivity : AppCompatActivity() {
     }
 
     class AndroidBridge(private val activity: MainActivity) {
+        @JavascriptInterface
+        fun nativeLogin(serverUrl: String, jsonPayload: String): String {
+            return try {
+                val cleanServer = serverUrl.trim().removeSuffix("/")
+                val url = URL("$cleanServer/api/login")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 12000
+                    readTimeout = 12000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.1")
+                }
+
+                conn.outputStream.use { os ->
+                    os.write(jsonPayload.toByteArray(Charsets.UTF_8))
+                    os.flush()
+                }
+
+                val responseCode = conn.responseCode
+                val stream = if (responseCode in 200..299) conn.inputStream else conn.errorStream
+                val responseBody = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: "{}"
+
+                // Save all Set-Cookie headers
+                val headerFields = conn.headerFields
+                val cookies = headerFields["Set-Cookie"]
+                if (!cookies.isNullOrEmpty()) {
+                    for (c in cookies) {
+                        CookieManager.getInstance().setCookie(cleanServer, c)
+                    }
+                    CookieManager.getInstance().flush()
+                }
+
+                conn.disconnect()
+                responseBody
+            } catch (e: Exception) {
+                "{\"success\":false,\"error\":\"Connection failed: ${e.message ?: "Unknown error"}\"}"
+            }
+        }
+
+        @JavascriptInterface
+        fun nativeFetch(targetUrl: String): String {
+            return try {
+                val url = URL(targetUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 12000
+                    readTimeout = 12000
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.1")
+
+                    val cookie = CookieManager.getInstance().getCookie(targetUrl)
+                    if (!cookie.isNullOrEmpty()) {
+                        setRequestProperty("Cookie", cookie)
+                    }
+                }
+
+                val responseCode = conn.responseCode
+                val stream = if (responseCode in 200..299) conn.inputStream else conn.errorStream
+                val responseBody = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: "{}"
+
+                val cookies = conn.headerFields["Set-Cookie"]
+                if (!cookies.isNullOrEmpty()) {
+                    for (c in cookies) {
+                        CookieManager.getInstance().setCookie(targetUrl, c)
+                    }
+                    CookieManager.getInstance().flush()
+                }
+
+                conn.disconnect()
+
+                if (responseCode == 401) {
+                    "{\"success\":false,\"require_login\":true,\"status\":401,\"error\":\"Authentication required\"}"
+                } else {
+                    responseBody
+                }
+            } catch (e: Exception) {
+                "{\"success\":false,\"error\":\"Connection failed: ${e.message ?: "Unknown error"}\"}"
+            }
+        }
+
 
         @JavascriptInterface
         fun downloadFile(url: String, filename: String) {
