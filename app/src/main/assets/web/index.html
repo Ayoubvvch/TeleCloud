@@ -895,7 +895,7 @@
       <div class="modal-section">
         <div class="modal-subtitle">
           <span>🚀 App Updates</span>
-          <span class="app-version-pill" id="appVersionPill">v2.2.1</span>
+          <span class="app-version-pill" id="appVersionPill">v2.2.2</span>
         </div>
         <p class="update-status" id="updateStatus">Check GitHub for the latest release and in-place updates.</p>
         <div id="updateActionContainer" style="display:none;"></div>
@@ -928,7 +928,7 @@
     let selectedFolder = '__all__';
 
     // Current App Version
-    let installedAppVersion = '2.2.1';
+    let installedAppVersion = '2.2.2';
     if (window.AndroidBridge && window.AndroidBridge.getAppVersion) {
       try {
         installedAppVersion = window.AndroidBridge.getAppVersion() || '2.2.0';
@@ -1221,19 +1221,9 @@
       }
     });
 
-    player.addEventListener('error', () => {
-      console.warn('Player stream error encountered on server:', activeServer);
-      // Auto fallback if direct server fails
-      if (activeServer !== FALLBACK_PROXY_SERVER) {
-        showToast('Switching to backup cloud server...');
-        activeServer = FALLBACK_PROXY_SERVER;
-        serverStatusText.textContent = 'Backup';
-        if (currentIndex !== -1 && filteredItems[currentIndex]) {
-          playVideo(currentIndex);
-        }
-      } else {
-        showToast('Unable to stream this video. Check login session.');
-      }
+    player.addEventListener('error', (e) => {
+      console.warn('Player stream error:', e);
+      showToast('Playback error. Please retry or verify connection.');
     });
 
     function playNext() {

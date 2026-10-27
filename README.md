@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v2.2.1-0284c7?style=for-the-badge&logo=android" alt="Release v2.2.1">
+  <img src="https://img.shields.io/badge/Release-v2.2.2-0284c7?style=for-the-badge&logo=android" alt="Release v2.2.2">
   <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%2B)-10b981?style=for-the-badge&logo=android" alt="Platform">
   <img src="https://img.shields.io/badge/Architecture-Kotlin%20%2B%20WebViewAssetLoader-38bdf8?style=for-the-badge" alt="Architecture">
   <img src="https://img.shields.io/badge/Auth-Quantum%20Gateway%20Protected-10b981?style=for-the-badge" alt="Auth">
@@ -95,7 +95,7 @@ Engineered with a **Zero-Bloat** philosophy, TeleCloud bypasses memory-heavy bro
 ## 📥 Installation
 
 1. Navigate to the [Latest Releases](https://github.com/Ayoubvvch/TeleCloud/releases/latest) page.
-2. Download `TeleCloud-v2.2.1.apk`.
+2. Download `TeleCloud-v2.2.2.apk`.
 3. Open the APK on your Android device (Android 8.0 Oreo or newer) and confirm installation.
 4. Future updates can be checked and downloaded directly from the **Settings (⚙️) > Check for Updates** menu inside the app.
 

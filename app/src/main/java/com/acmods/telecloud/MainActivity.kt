@@ -33,6 +33,21 @@ import java.net.URL
 import java.net.URLDecoder
 
 class MainActivity : AppCompatActivity() {
+    fun getSavedAuthCookie(urlStr: String? = null): String? {
+        val cmCookie = if (!urlStr.isNullOrEmpty()) {
+            try { CookieManager.getInstance().getCookie(urlStr) } catch (_: Exception) { null }
+        } else null
+        if (!cmCookie.isNullOrEmpty()) return cmCookie
+
+        val sp = getSharedPreferences("telecloud_auth", Context.MODE_PRIVATE)
+        return sp.getString("auth_cookie", null)
+    }
+
+    fun saveAuthCookie(cookie: String) {
+        val sp = getSharedPreferences("telecloud_auth", Context.MODE_PRIVATE)
+        sp.edit().putString("auth_cookie", cookie).apply()
+    }
+
 
     private lateinit var rootContainer: FrameLayout
     private lateinit var webView: WebView
@@ -153,7 +168,64 @@ class MainActivity : AppCompatActivity() {
                 view: WebView,
                 request: WebResourceRequest
             ): WebResourceResponse? {
-                return assetLoader.shouldInterceptRequest(request.url)
+                val urlStr = request.url.toString()
+                if (urlStr.startsWith("https://appassets.androidplatform.net")) {
+                    return assetLoader.shouldInterceptRequest(request.url)
+                }
+
+                // Intercept cloud streaming to inject auth session cookie & support 206 Partial Content
+                if (urlStr.contains("/api/tg-cloud/stream")) {
+                    try {
+                        val url = URL(urlStr)
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            requestMethod = request.method
+                            connectTimeout = 15000
+                            readTimeout = 15000
+
+                            // Forward request headers (Range header for video seeking)
+                            for ((k, v) in request.requestHeaders) {
+                                setRequestProperty(k, v)
+                            }
+
+                            // Inject auth cookie from persistent storage or CookieManager
+                            val cookie = getSavedAuthCookie(urlStr)
+                            if (!cookie.isNullOrEmpty()) {
+                                setRequestProperty("Cookie", cookie)
+                            }
+                            setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
+                        }
+
+                        val statusCode = conn.responseCode
+                        val statusMessage = conn.responseMessage?.ifEmpty { "OK" } ?: "OK"
+                        val mimeType = conn.contentType?.substringBefore(";")?.trim() ?: "video/mp4"
+                        val encoding = conn.contentEncoding ?: "UTF-8"
+
+                        val responseHeaders = mutableMapOf<String, String>()
+                        for ((key, values) in conn.headerFields) {
+                            if (key != null && values.isNotEmpty()) {
+                                responseHeaders[key] = values.joinToString(", ")
+                            }
+                        }
+
+                        // Ensure Accept-Ranges and CORS headers
+                        responseHeaders["Access-Control-Allow-Origin"] = "*"
+                        responseHeaders["Accept-Ranges"] = "bytes"
+
+                        val stream = if (statusCode in 200..299) conn.inputStream else conn.errorStream
+                        return WebResourceResponse(
+                            mimeType,
+                            encoding,
+                            statusCode,
+                            statusMessage,
+                            responseHeaders,
+                            stream
+                        )
+                    } catch (e: Exception) {
+                        // Fallback to default handling
+                    }
+                }
+
+                return super.shouldInterceptRequest(view, request)
             }
 
             override fun shouldOverrideUrlLoading(
@@ -346,7 +418,7 @@ class MainActivity : AppCompatActivity() {
             val desc = if (isApk) "TeleCloud - App Update" else "TeleCloud - Downloading media"
 
             val uri = Uri.parse(url)
-            val cookie = try { CookieManager.getInstance().getCookie(url) } catch (_: Exception) { null }
+            val cookie = getSavedAuthCookie(url)
             val request = DownloadManager.Request(uri).apply {
                 setTitle(cleanName)
                 setDescription(desc)
@@ -370,7 +442,7 @@ class MainActivity : AppCompatActivity() {
 
     fun openExternalPlayer(url: String, title: String) {
         try {
-            val cookie = try { CookieManager.getInstance().getCookie(url) } catch (_: Exception) { null }
+            val cookie = getSavedAuthCookie(url)
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(Uri.parse(url), "video/*")
                 putExtra(Intent.EXTRA_TITLE, title)
@@ -419,7 +491,7 @@ class MainActivity : AppCompatActivity() {
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.1")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
                 }
 
                 conn.outputStream.use { os ->
@@ -437,6 +509,7 @@ class MainActivity : AppCompatActivity() {
                 if (!cookies.isNullOrEmpty()) {
                     for (c in cookies) {
                         CookieManager.getInstance().setCookie(cleanServer, c)
+                        saveAuthCookie(c)
                     }
                     CookieManager.getInstance().flush()
                 }
@@ -457,7 +530,7 @@ class MainActivity : AppCompatActivity() {
                     connectTimeout = 12000
                     readTimeout = 12000
                     setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.1")
+                    setRequestProperty("User-Agent", "TeleCloudApp/2.2.2")
 
                     val cookie = CookieManager.getInstance().getCookie(targetUrl)
                     if (!cookie.isNullOrEmpty()) {
